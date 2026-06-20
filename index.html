@@ -1,731 +1,619 @@
 <!DOCTYPE html>
 <html lang="tr" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SeeOS — Cloud v4.0</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>tailwind.config={darkMode:'class',theme:{extend:{colors:{apple:{blue:'#007AFF',green:'#34C759',orange:'#FF9500',red:'#FF3B30',purple:'#AF52DE',pink:'#FF2D55',teal:'#5AC8FA'}}}}}</script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,900&display=swap');
-        *{font-family:'Inter',sans-serif} body{background:#000;color:#f5f5f7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-        .glass{background:rgba(255,255,255,0.06);backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,0.08);border-radius:20px}
-        .card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.06);border-radius:18px;transition:all .3s}
-        .card:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.12)}
-        .btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 20px;font-weight:600;font-size:14px;transition:all .2s;cursor:pointer;color:#f5f5f7}
-        .btn:hover{background:rgba(255,255,255,0.16)} .btn-primary{background:#007AFF;border-color:#007AFF}.btn-primary:hover{background:#0066d6}
-        .btn-danger{background:rgba(255,59,48,0.2);border-color:rgba(255,59,48,0.3);color:#FF3B30}.btn-danger:hover{background:rgba(255,59,48,0.35)}
-        .btn-sm{padding:6px 14px;font-size:12px;border-radius:8px}
-        .input{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 16px;color:#f5f5f7;font-size:14px;outline:none;width:100%}.input:focus{border-color:#007AFF}
-        .tab-btn.active{background:rgba(255,255,255,0.1)!important;color:#fff!important}
-        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
-        .countdown-digit{font-size:2rem;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
-        .chat-msg{padding:10px 14px;border-radius:14px;max-width:85%;font-size:13px;line-height:1.5}
-        .chat-user{background:#007AFF;color:#fff;margin-left:auto;border-bottom-right-radius:4px}
-        .chat-bot{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.06);border-bottom-left-radius:4px}
-        .pulse{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-        .task-done{text-decoration:line-through;opacity:.4}
-        .modal-overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center}
-        .modal-box{background:rgba(20,20,20,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:24px;max-width:90vw;max-height:80vh;overflow-y:auto}
-        @media(max-width:768px){.sidebar{position:fixed;left:-280px;top:0;z-index:50;height:100vh;transition:left .3s;width:260px}.sidebar.open{left:0}.mobile-menu-btn{display:flex!important}.countdown-digit{font-size:1.5rem}}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SeeOS v2.0 — Digital Legacy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{colors:{neon:{red:'#ff1a1a',pink:'#ff006e',orange:'#ff6b00',blue:'#0066ff',green:'#00e676',purple:'#b700ff'}}}}}</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,900&family=JetBrains+Mono:wght@400;700&display=swap');
+*{font-family:'Inter',sans-serif}body{background:#000;color:#e0e0e0;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* Glass panels */
+.glass{background:rgba(18,18,18,0.7);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.06);border-radius:20px}
+.glass-light{background:rgba(25,25,25,0.6);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.04);border-radius:16px}
+.glass-red{background:rgba(255,26,26,0.08);border:1px solid rgba(255,26,26,0.2);border-radius:16px}
+
+/* Neon glow */
+.neon-glow{box-shadow:0 0 20px rgba(255,26,26,0.3),0 0 60px rgba(255,26,26,0.1)}
+.neon-text{text-shadow:0 0 10px rgba(255,26,26,0.6),0 0 30px rgba(255,26,26,0.3)}
+.neon-border{border:1px solid rgba(255,26,26,0.5);box-shadow:0 0 10px rgba(255,26,26,0.2),inset 0 0 10px rgba(255,26,26,0.05)}
+
+/* Animations */
+@keyframes pulse-neon{0%,100%{box-shadow:0 0 5px rgba(255,26,26,0.5),0 0 20px rgba(255,26,26,0.2)}50%{box-shadow:0 0 15px rgba(255,26,26,0.8),0 0 40px rgba(255,26,26,0.4),0 0 60px rgba(255,26,26,0.2)}}
+@keyframes spin-slow{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes breathe{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes slide-in{from{opacity:0;transform:translateX(-15px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scan-line{0%{top:-100%}100%{top:100%}}
+
+.pulse-neon{animation:pulse-neon 2s infinite}
+.spin-slow{animation:spin-slow 12s linear infinite}
+.float{animation:float 4s ease-in-out infinite}
+.breathe{animation:breathe 3s ease-in-out infinite}
+.slide-in{animation:slide-in .4s ease-out}
+
+/* Sidebar */
+.sidebar{background:rgba(8,8,8,0.95);backdrop-filter:blur(20px);border-right:1px solid rgba(255,255,255,0.04);transition:width .35s cubic-bezier(.4,0,.2,1);width:260px;z-index:40}
+.sidebar.collapsed{width:64px}
+.sidebar .menu-text{transition:opacity .2s,width .2s;overflow:hidden}
+.sidebar.collapsed .menu-text{opacity:0;width:0}
+.sidebar-item{transition:all .2s;border-radius:12px;margin:2px 8px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:12px;color:rgba(255,255,255,0.4);font-size:13px;font-weight:500;white-space:nowrap}
+.sidebar-item:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.8)}
+.sidebar-item.active{background:rgba(255,26,26,0.1);color:#ff1a1a;border:1px solid rgba(255,26,26,0.2)}
+.sidebar.collapsed .sidebar-item{justify-content:center;padding:10px}
+.sidebar-icon{width:20px;height:20px;flex-shrink:0}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
+
+/* Kanban */
+.kanban-col{min-height:120px;transition:all .2s}
+.kanban-card{cursor:grab;transition:all .2s}
+.kanban-card:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.kanban-card:active{cursor:grabbing}
+
+/* Health rings */
+.ring-bg{stroke:rgba(255,255,255,0.06)}
+.ring-fg{transition:stroke-dashoffset 1s ease}
+
+/* Chart containers */
+.chart-wrap{position:relative;width:100%;height:100%}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:-280px;top:0;height:100vh;width:260px!important;transition:left .35s}
+  .sidebar.open{left:0}
+  .sidebar.collapsed{left:-280px}
+  .mobile-overlay{display:block}
+  .menu-hamburger{display:flex!important}
+  .sidebar.collapsed .menu-text{opacity:1;width:auto}
+}
+@media(min-width:769px){.mobile-overlay{display:none}.menu-hamburger{display:none}}
+
+/* Particle BG */
+.particles{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.15}
+.particle{position:absolute;width:1px;height:1px;background:#ff1a1a;border-radius:50%;animation:float-particle linear infinite}
+@keyframes float-particle{0%{transform:translateY(100vh) scale(0)}10%{transform:translateY(80vh) scale(1)}90%{transform:translateY(10vh) scale(1)}100%{transform:translateY(-10vh) scale(0)}}
+
+/* Focus Blast overlay */
+.focus-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+.focus-countdown{font-family:'JetBrains Mono',monospace;font-size:8rem;font-weight:900;color:#ff1a1a;text-shadow:0 0 40px rgba(255,26,26,0.8),0 0 100px rgba(255,26,26,0.4)}
+</style>
 </head>
 <body class="min-h-screen">
 
-<!-- ═══════════ AUTH OVERLAY ═══════════ -->
-<div id="auth-overlay" class="fixed inset-0 z-50 items-center justify-center hidden" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:none">
-    <div class="glass p-8 w-full max-w-sm mx-4">
-        <h2 class="text-xl font-bold mb-6 text-center text-white">SeeOS</h2>
-        <div class="flex gap-2 mb-6">
-            <button id="auth-tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 rounded-lg text-sm font-medium transition" style="background:rgba(255,255,255,0.12)">Giriş Yap</button>
-            <button id="auth-tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 rounded-lg text-sm font-medium text-white/50 transition">Kayıt Ol</button>
-        </div>
-        <form id="auth-form-login" onsubmit="handleLogin(event)">
-            <p id="login-error" class="text-[#FF3B30] text-xs mb-3 hidden"></p>
-            <input id="login-email" type="email" placeholder="Email" required class="input mb-3">
-            <input id="login-password" type="password" placeholder="Şifre" required class="input mb-4">
-            <button type="submit" class="btn btn-primary w-full">🔐 Giriş Yap</button>
-        </form>
-        <form id="auth-form-register" onsubmit="handleRegister(event)" class="hidden">
-            <p id="reg-error" class="text-[#FF3B30] text-xs mb-3 hidden"></p>
-            <input id="reg-name" placeholder="Adınız" required class="input mb-3">
-            <input id="reg-email" type="email" placeholder="Email" required class="input mb-3">
-            <input id="reg-password" type="password" placeholder="Şifre (min 6 karakter)" required class="input mb-4">
-            <button type="submit" class="btn btn-primary w-full">✨ Hesap Oluştur</button>
-        </form>
-    </div>
+<!-- PARTICLES -->
+<div class="particles" id="particles"></div>
+
+<!-- FOCUS BLAST OVERLAY -->
+<div id="focus-overlay" class="focus-overlay hidden">
+  <p class="text-sm text-white/30 uppercase tracking-[.3em]">Focus Blast</p>
+  <div class="focus-countdown" id="focus-countdown">25:00</div>
+  <p class="text-white/50 text-lg" id="focus-task-label">Deep Focus</p>
+  <div class="flex gap-4 mt-6">
+    <button onclick="pauseFocus()" class="px-6 py-3 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 transition text-sm">⏸ Pause</button>
+    <button onclick="stopFocus()" class="px-6 py-3 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition text-sm neon-border">✕ Bitir</button>
+  </div>
 </div>
+
+<!-- MOBILE OVERLAY -->
+<div id="mobile-overlay" class="mobile-overlay fixed inset-0 z-30 hidden" style="background:rgba(0,0,0,0.6)" onclick="closeSidebar()"></div>
 
 <!-- ═══════════ LAYOUT ═══════════ -->
-<div class="flex min-h-screen">
-    <!-- SIDEBAR -->
-    <aside id="sidebar" class="sidebar w-60 flex-shrink-0 border-r border-white/5 p-4 flex flex-col gap-2" style="background:rgba(0,0,0,0.4)">
-        <div class="flex items-center gap-2 px-3 py-2 mb-4">
-            <span class="text-lg font-bold tracking-tight text-white">SeeOS</span>
-            <span class="text-[10px] text-white/30 bg-white/5 px-1.5 py-0.5 rounded">v4</span>
+<div class="flex min-h-screen relative">
+  
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar flex flex-col py-4 h-screen sticky top-0">
+    <!-- Logo -->
+    <div class="flex items-center gap-3 px-4 mb-6 h-10">
+      <div class="w-8 h-8 rounded-lg bg-red-500/15 pulse-neon flex items-center justify-center flex-shrink-0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff1a1a" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      </div>
+      <span class="menu-text font-bold text-base tracking-tight neon-text">SeeOS</span>
+      <span class="menu-text text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 font-bold spin-slow" style="animation-duration:8s">v2.0</span>
+    </div>
+
+    <!-- Menu -->
+    <nav class="flex-1 flex flex-col gap-0.5 overflow-y-auto" id="sidebar-nav"></nav>
+
+    <!-- Focus Blast -->
+    <div class="px-2 mt-2 mb-2">
+      <button onclick="startFocusBlast()" class="w-full py-3 rounded-xl font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 pulse-neon neon-border" style="background:rgba(255,26,26,0.12);color:#ff1a1a">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#ff1a1a" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span class="menu-text">⚡ Focus Blast</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 flex flex-col min-h-screen relative z-10">
+    <!-- HEADER -->
+    <header class="flex items-center justify-between px-6 py-3 border-b border-white/5" style="background:rgba(0,0,0,0.5);backdrop-filter:blur(20px)">
+      <div class="flex items-center gap-4">
+        <button class="menu-hamburger w-8 h-8 items-center justify-center rounded-lg bg-white/5 text-white/60 hover:text-white hidden" onclick="toggleSidebar()">☰</button>
+        <div>
+          <h1 class="text-sm font-bold tracking-tight text-white/90">SeeOS <span class="text-red-500">v2.0</span></h1>
+          <p class="text-[10px] text-white/30">Digital Legacy Command</p>
         </div>
-        <nav id="sidebar-nav" class="flex flex-col gap-1 flex-1 overflow-y-auto"></nav>
-        <div class="pt-4 border-t border-white/5">
-            <button onclick="showAuthModal()" id="header-login-btn" class="w-full text-left px-3 py-2 text-xs text-white/40 hover:text-white/80 rounded-lg transition">🔐 Giriş</button>
-            <div id="header-user-info" class="hidden">
-                <span id="header-user-name" class="text-xs text-white/60 px-3 block"></span>
-                <button onclick="handleLogout()" class="w-full text-left px-3 py-2 text-xs text-white/30 hover:text-red-400 rounded-lg transition">Çıkış</button>
-            </div>
+      </div>
+      <div class="flex items-center gap-6">
+        <div class="text-right">
+          <p id="header-time" class="text-sm font-semibold text-white/70 mono">00:00</p>
+          <p id="header-date" class="text-[10px] text-white/30">---</p>
         </div>
-    </aside>
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full glass-light">
+          <span class="text-xs">🌤</span>
+          <span class="text-[10px] text-white/40">İstanbul, 24°C</span>
+        </div>
+        <div id="header-avatar" class="w-9 h-9 rounded-full border-2 border-red-500/30 overflow-hidden cursor-pointer hover:border-red-400 transition flex items-center justify-center bg-white/5" onclick="document.getElementById('avatar-upload').click()" title="Profil fotoğrafı">
+          <img id="avatar-img" class="w-full h-full object-cover hidden" />
+          <svg id="avatar-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <input type="file" id="avatar-upload" accept="image/*" class="hidden" onchange="uploadAvatar(event)">
+      </div>
+    </header>
 
-    <div id="mobile-backdrop" class="fixed inset-0 z-40 hidden" style="background:rgba(0,0,0,0.5)" onclick="closeMobileMenu()"></div>
-
-    <main class="flex-1 flex flex-col min-h-screen">
-        <header class="flex items-center justify-between px-6 py-4 border-b border-white/5">
-            <div class="flex items-center gap-3">
-                <button onclick="toggleMobileMenu()" class="mobile-menu-btn hidden w-8 h-8 items-center justify-center rounded-lg bg-white/5 lg:hidden">☰</button>
-                <span id="live-clock" class="text-white/60 text-sm">00:00</span>
-            </div>
-            <div class="flex items-center gap-3">
-                <div id="profile-area" class="relative group cursor-pointer w-9 h-9 rounded-full border-2 border-white/10 flex items-center justify-center overflow-hidden bg-white/5 hover:border-white/30 transition" onclick="document.getElementById('avatar-input').click()" title="Profil fotoğrafı yükle">
-                    <svg id="avatar-placeholder" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <img id="avatar-img" src="" class="w-full h-full object-cover hidden" />
-                </div>
-                <input type="file" id="avatar-input" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="handleAvatarUpload(event)">
-            </div>
-        </header>
-
-        <!-- ═════ TABS ═════ -->
-        <div id="tab-dashboard" class="tab-content p-6"><h2 class="text-2xl font-bold mb-6">📊 Dashboard</h2><div id="dash-empty" class="glass p-12 text-center"><p class="text-5xl mb-4">🚀</p><p class="text-xl font-semibold text-white/80 mb-2">SeeOS'a Hoş Geldin!</p><p class="text-sm text-white/40">Çalışma seansı ekleyerek başla.</p></div><div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="kpi-grid"></div><div id="dash-extra" class="grid grid-cols-1 md:grid-cols-2 gap-6"><div id="study-recent" class="glass p-4"><h3 class="text-lg font-semibold mb-3">📝 Son Seanslar</h3><div id="study-list-inner"></div></div><div id="sleep-card" class="glass p-4"><h3 class="text-lg font-semibold mb-3">😴 Son Uyku</h3><div id="sleep-card-inner" class="text-sm text-white/50"></div></div></div></div>
-
-        <div id="dash-chart" class="glass p-4 col-span-full mt-6"><h3 class="text-lg font-semibold mb-3">📈 Haftalık Çalışma</h3><canvas id="weeklyChart" height="200"></canvas></div>
-        <div id="tab-yks" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">🎯 YKS Komuta Merkezi</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><div class="glass p-6 text-center"><p class="text-sm text-white/40 mb-1">TYT'ye</p><p id="yks-tyt-countdown" class="text-3xl font-black text-apple-blue">--</p><p class="text-xs text-white/30 mt-2">20 Haziran 2026</p></div><div class="glass p-6 text-center"><p class="text-sm text-white/40 mb-1">AYT'ye</p><p id="yks-ayt-countdown" class="text-3xl font-black text-apple-green">--</p><p class="text-xs text-white/30 mt-2">21 Haziran 2026</p></div></div><div class="glass p-4 mb-6"><h3 class="text-lg font-semibold mb-3">📈 Net Takibi</h3><div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3"><input id="yks-subject" placeholder="Ders" class="input text-xs"><input id="yks-topic" placeholder="Konu" class="input text-xs"><input id="yks-correct" type="number" placeholder="Doğru" class="input text-xs" value="0"><input id="yks-wrong" type="number" placeholder="Yanlış" class="input text-xs" value="0"><select id="yks-type" class="input text-xs"><option>TYT</option><option>AYT</option></select></div><button onclick="addYKSProgress()" class="btn btn-primary btn-sm">➕ Ekle</button><div id="yks-progress-list" class="mt-4 space-y-1 text-sm"></div></div></div>
-
-        <div id="tab-study" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">📚 Çalışma & Pomodoro</h2><div class="glass p-6 mb-6"><h3 class="text-lg font-semibold mb-4">⏱ Pomodoro</h3><div class="text-center mb-4"><span id="pomodoro-display" class="text-5xl font-mono font-bold">25:00</span><p id="pomodoro-status" class="text-sm text-white/50 mt-2">Hazır</p></div><div class="flex gap-2 justify-center flex-wrap mb-4"><button onclick="setPomodoro(25,5)" class="btn btn-sm">25/5</button><button onclick="setPomodoro(50,10)" class="btn btn-sm">50/10</button><button onclick="setPomodoro(90,20)" class="btn btn-sm">90/20</button></div><div class="flex gap-3 justify-center"><button id="pom-start" onclick="startPomodoro()" class="btn btn-primary btn-sm">▶ Başlat</button><button onclick="pausePomodoro()" class="btn btn-sm">⏸</button><button onclick="resetPomodoro()" class="btn btn-sm">↺</button></div></div><div class="glass p-6"><h3 class="text-lg font-semibold mb-4">📝 Çalışma Kaydı</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4"><input id="study-subject" placeholder="Ders / Konu" class="input"><input id="study-duration" type="number" placeholder="Süre (dk)" class="input" value="60"><input id="study-focus" type="number" placeholder="Odak (1-10)" class="input" value="7" min="1" max="10"></div><button onclick="addStudySession()" class="btn btn-primary btn-sm">💾 Kaydet</button><div id="study-session-list" class="mt-4 space-y-2"></div></div></div>
-
-        <div id="tab-coach" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">🤖 AI Koç</h2><div class="glass flex flex-col" style="height:calc(100vh - 200px)"><div id="coach-messages" class="flex-1 overflow-y-auto p-4 space-y-3"><div class="chat-msg chat-bot">👋 Selam! Ben SeeOS AI Koç'un. Ders çalışma, motivasyon, YKS stratejisi — ne hakkında konuşmak istersin?</div></div><div class="p-4 border-t border-white/5 flex gap-2"><input id="coach-input" class="input flex-1" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter')sendCoach()"><button onclick="sendCoach()" class="btn btn-primary btn-sm">➤</button></div></div></div>
-
-        <div id="tab-sleep" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">😴 Uyku Takibi</h2><div class="glass p-6 mb-6 max-w-md"><h3 class="text-lg font-semibold mb-4">💤 Yeni Kayıt</h3><div class="grid grid-cols-2 gap-3 mb-3"><div><label class="text-xs text-white/40">Uyku Saati</label><input id="sleep-time" type="datetime-local" class="input mt-1"></div><div><label class="text-xs text-white/40">Uyanma</label><input id="wake-time" type="datetime-local" class="input mt-1"></div></div><div class="flex gap-3 mb-4"><div class="flex-1"><label class="text-xs text-white/40">Kalite (1-10)</label><input id="sleep-quality" type="number" class="input mt-1" value="7" min="1" max="10"></div><div class="flex-1"><label class="text-xs text-white/40">Not</label><input id="sleep-note" class="input mt-1" placeholder="Rüya vs..."></div></div><button onclick="addSleep()" class="btn btn-primary btn-sm">💾 Kaydet</button></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📋 Geçmiş</h3><div id="sleep-list" class="space-y-2 text-sm"></div></div></div>
-
-        <div id="tab-focus" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">⚡ Focus Blast</h2><div class="glass p-6 mb-6 max-w-md"><h3 class="text-lg font-semibold mb-4">🚀 Yeni Blast</h3><input id="focus-task" placeholder="Ne yapacaksın?" class="input mb-3"><input id="focus-duration" type="number" placeholder="Süre (dk)" class="input mb-4" value="25"><button onclick="startFocusBlast()" class="btn btn-primary">⚡ Blast Başlat</button><div id="focus-active" class="hidden mt-6 text-center"><p id="focus-timer" class="text-5xl font-mono font-bold text-apple-orange mb-2">25:00</p><p id="focus-task-name" class="text-white/60"></p><button onclick="completeFocusBlast()" class="btn btn-primary btn-sm mt-4">✅ Tamamla</button></div></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📋 Geçmiş Blast'lar</h3><div id="focus-list" class="space-y-2 text-sm"></div></div></div>
-
-        <div class="glass p-4 mb-6 hidden" id="yt-player-box"><div class="aspect-video rounded-lg overflow-hidden bg-black"><iframe id="yt-player" class="w-full h-full" allow="autoplay; encrypted-media" allowfullscreen></iframe></div></div>
-        <div class="glass p-4 mb-6 max-w-lg"><h3 class="text-lg font-semibold mb-3">🔍 Video Ara</h3><div class="flex gap-2"><input id="yt-search" placeholder="Arama terimi..." class="input flex-1" onkeypress="if(event.key==='Enter')searchYT()"><button onclick="searchYT()" class="btn btn-primary btn-sm">🔍 Ara</button></div></div>
-
-        <div id="tab-notes" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">📝 Notlar</h2><div class="glass p-4 mb-6 max-w-lg"><div class="flex gap-2 mb-3"><input id="note-title" placeholder="Başlık" class="input flex-1"><button onclick="addNote()" class="btn btn-primary btn-sm">➕ Yeni Not</button></div></div><div id="notes-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
-
-        <div id="tab-planner" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">📋 Planlayıcı</h2><div class="glass p-4 mb-6 max-w-lg"><h3 class="text-lg font-semibold mb-3">➕ Yeni Görev</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3"><input id="task-title" placeholder="Görev" class="input"><input id="task-due" type="date" class="input"></div><div class="flex gap-2 mb-3"><select id="task-priority" class="input"><option value="medium">🟡 Orta</option><option value="low">🟢 Düşük</option><option value="high">🟠 Yüksek</option><option value="urgent">🔴 Acil</option></select><button onclick="addTask()" class="btn btn-primary btn-sm flex-1">➕ Ekle</button></div></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📋 Görevler</h3><div id="task-list" class="space-y-2"></div></div></div>
-    </main>
+    <!-- CONTENT AREA -->
+    <div class="flex-1 p-6 overflow-y-auto" id="main-content">
+      <!-- All tab contents rendered here by JS -->
+    </div>
+  </main>
 </div>
 
-        <div class="glass p-4 mt-4"><h3 class="text-lg font-semibold mb-3">📉 Son 7 Gün Uyku Kalitesi</h3><canvas id="sleepChart" height="200"></canvas></div>
 <script>
 // ═══════════════════════════════════════════
-// SUPABASE CONFIG
+// DATA LAYER — localStorage
 // ═══════════════════════════════════════════
-const SB_URL = 'https://mrpegrgjndfewwlknqfk.supabase.co';
-const SB_KEY = 'eyJhbG...EM7g';
-const sb = supabase.createClient(SB_URL, SB_KEY);
-let user = null;
-let appData = {};
-let focusInterval = null, focusSeconds = 0, focusActive = false, focusBlastId = null;
-
-// ═══════ SAFE SUPABASE WRAPPER ═══════
-async function sbQuery(promise, label) {
-    try { const {data,error}=await promise; if(error){console.warn('SB['+label+']:',error.message);return null;} return data; }
-    catch(e){ console.warn('SB['+label+']:',e.message); return null; }
-}
-
-// ═══════ AUTH ═══════
-function switchAuthTab(tab) {
-    const isLogin = tab === 'login';
-    document.getElementById('auth-tab-login').style.background = isLogin ? 'rgba(255,255,255,0.12)' : '';
-    document.getElementById('auth-tab-register').style.background = !isLogin ? 'rgba(255,255,255,0.12)' : '';
-    document.getElementById('auth-form-login').classList.toggle('hidden', !isLogin);
-    document.getElementById('auth-form-register').classList.toggle('hidden', isLogin);
-    document.getElementById('login-error').classList.add('hidden');
-    document.getElementById('reg-error').classList.add('hidden');
-}
-function showAuthModal(){ const el=document.getElementById('auth-overlay'); el.style.display='flex'; switchAuthTab('login'); }
-function hideAuthModal(){ const el=document.getElementById('auth-overlay'); el.style.display='none'; }
-
-async function handleLogin(e) {
-    e.preventDefault();
-    const errEl = document.getElementById('login-error'); errEl.classList.add('hidden');
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    const {data,error} = await sb.auth.signInWithPassword({email,password});
-    if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); return; }
-    user = data.user;
-    await loadAppData();
-    updateUI();
-    hideAuthModal();
-    refreshAll();
-}
-
-async function handleRegister(e) {
-    e.preventDefault();
-    const errEl = document.getElementById('reg-error'); errEl.classList.add('hidden');
-    const name = document.getElementById('reg-name').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value;
-    const {data,error} = await sb.auth.signUp({email,password,options:{data:{name}}});
-    if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); return; }
-    if (data.user) {
-        user = data.user;
-        await sbQuery(sb.from('profiles').upsert({user_id:user.id,username:name},{onConflict:'user_id'}),'profile');
-        await sbQuery(sb.from('settings').upsert({user_id:user.id,theme:'dark',goal_settings:{persona:'Motivational',sidebar_order:['dashboard','yks','study','coach','sleep','focus','youtube','notes','planner','settings']}},{onConflict:'user_id'}),'settings');
-        await loadAppData();
-        updateUI();
-        hideAuthModal();
-        refreshAll();
-    }
-}
-
-async function handleLogout() {
-    await sb.auth.signOut();
-    user = null; appData = {};
-    updateUI();
-    refreshAll();
-}
-
-function updateUI() {
-    const loggedIn = !!user;
-    document.getElementById('header-login-btn').classList.toggle('hidden', loggedIn);
-    document.getElementById('header-user-info').classList.toggle('hidden', !loggedIn);
-    if (loggedIn) document.getElementById('header-user-name').textContent = user.user_metadata?.name || user.email;
-    loadAvatar();
-}
-
-// ═══════ APP DATA ═══════
-async function loadAppData() {
-    if (!user) { appData = {}; renderSidebar(); return; }
-    const data = await sbQuery(sb.from('settings').select('goal_settings,theme').eq('user_id',user.id).limit(1),'load settings');
-    appData = data?.[0]?.goal_settings || {};
-    if (!appData || Object.keys(appData).length === 0) {
-        appData = { persona:'Motivational', sidebar_order:['dashboard','yks','study','coach','sleep','focus','youtube','notes','planner','settings'] };
-    }
-    if (document.getElementById('setting-persona')) document.getElementById('setting-persona').value = appData.persona || 'Motivational';
-    if (document.getElementById('setting-username')) document.getElementById('setting-username').value = appData.username || '';
-    if (document.getElementById('setting-apikey')) document.getElementById('setting-apikey').value = appData.deepseek_key || '';
-    renderSidebar();
-}
-
-async function saveAppData() {
-    if (!user) return;
-    await sbQuery(sb.from('settings').upsert({user_id:user.id,theme:'dark',goal_settings:appData},{onConflict:'user_id'}),'save settings');
-}
-
-function saveSetting(key, value) { appData[key] = value; saveAppData(); }
-
-// ═══════ SIDEBAR ═══════
-const TAB_ICONS = {
-    dashboard: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
-    yks: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/><line x1="22" y1="2" x2="16" y2="8"/>',
-    study: '<path d="M12 14l9-5-9-5-9 5z"/><path d="M12 14l6.7-3.7"/><line x1="12" y1="14" x2="12" y2="21"/>',
-    coach: '<path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',
-    sleep: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
-    focus: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
-    youtube: '<polygon points="19.615 3.184 4.385 3.184 1 6 1 18 4.385 20.816 19.615 20.816 23 18 23 6 19.615 3.184"/><polygon points="10 8 16 12 10 16 10 8"/>',
-    notes: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
-    planner: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
-    settings: '<circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
+const LS = {
+  get(k, def) { try { const v = localStorage.getItem('seeos_'+k); return v ? JSON.parse(v) : def; } catch { return def; } },
+  set(k, v) { localStorage.setItem('seeos_'+k, JSON.stringify(v)); }
 };
-const TAB_LABELS = { dashboard:'Dashboard', yks:'🎯 YKS', study:'📚 Çalışma', coach:'🤖 Koç', sleep:'😴 Uyku', focus:'⚡ Focus', youtube:'▶ YT', notes:'📝 Notlar', planner:'📋 Plan', settings:'⚙️ Ayarlar' };
-const DEFAULT_ORDER = ['dashboard','yks','study','coach','sleep','focus','youtube','notes','planner','settings'];
+
+// Default dummy data
+function defaultData() { return {
+  sleep: [
+    {date:'14 Haz',hours:6.2,quality:7},{date:'15 Haz',hours:7.8,quality:9},
+    {date:'16 Haz',hours:5.4,quality:5},{date:'17 Haz',hours:8.1,quality:9},
+    {date:'18 Haz',hours:4.9,quality:4},{date:'19 Haz',hours:6.5,quality:7},
+    {date:'Bugün',hours:7.2,quality:8}
+  ],
+  study: [
+    {subject:'TYT Matematik',hours:4.5,focus:9},{subject:'AYT Fizik',hours:3.2,focus:8},
+    {subject:'TYT Türkçe',hours:2.8,focus:7},{subject:'AYT Kimya',hours:3.5,focus:9},
+    {subject:'TYT Sosyal',hours:2.0,focus:6},{subject:'AYT Biyoloji',hours:2.5,focus:8}
+  ],
+  health: {steps:8432,water:1800,calories:2150,sleepAvg:6.8},
+  notes: [
+    {id:1,title:'YKS Son Tekrar Planı',content:'30 dk branş denemesi → 20 dk yanlış analizi → 10 dk konu tekrarı',color:'#ff1a1a'},
+    {id:2,title:'Motivasyon Sözleri',content:'"Başarı, her gün tekrarlanan küçük çabaların toplamıdır." — Robert Collier',color:'#ff6b00'},
+    {id:3,title:'Haftalık Hedefler',content:'📚 45 saat çalışma\n🎯 5 TYT denemesi\n😴 7+ saat uyku\n🏃 10K adım',color:'#0066ff'}
+  ],
+  tasks: [
+    {id:1,title:'TYT Denemesi #24',status:'done',priority:'high'},
+    {id:2,title:'AYT İntegral Tekrar',status:'in_progress',priority:'urgent'},
+    {id:3,title:'Geometri Soru Bankası Bölüm 3',status:'in_progress',priority:'high'},
+    {id:4,title:'Fizik Optik Özet Çıkar',status:'todo',priority:'medium'},
+    {id:5,title:'Kimya Organik Notlarını Düzenle',status:'todo',priority:'medium'}
+  ],
+  whywall: ['"Neden Tıp?" — Çünkü insanlara dokunmak istiyorum.','"Neden her gün?" — Çünkü 1 gün boşlamak 3 gün geriye götürür.','"Neden şimdi?" — Çünkü 2027\'de pişman olmak istemiyorum.'],
+  settings: {sidebarCollapsed:false,activeTab:'dashboard'}
+};}
+
+let DATA = LS.get('data', defaultData());
+let activeTab = DATA.settings?.activeTab || 'dashboard';
+let charts = {};
+let focusInterval = null, focusRunning = false, focusSeconds = 25*60, focusTask = '';
+
+// Save helper
+function save() { LS.set('data', DATA); }
+
+// ═══════════ SIDEBAR ═══════════
+const MENU = [
+  {id:'dashboard',label:'Dashboard',icon:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'},
+  {id:'coach',label:'AI Koç',icon:'<path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>'},
+  {id:'yks',label:'YKS Komuta',icon:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/><line x1="22" y1="2" x2="16" y2="8"/>'},
+  {id:'study',label:'Çalışma',icon:'<path d="M12 14l9-5-9-5-9 5z"/><path d="M12 14l6.7-3.7"/><line x1="12" y1="14" x2="12" y2="21"/>'},
+  {id:'sleep',label:'Uyku',icon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'},
+  {id:'health',label:'Sağlık',icon:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'},
+  {id:'youtube',label:'YouTube',icon:'<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>'},
+  {id:'notes',label:'Notlar',icon:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>'},
+  {id:'planner',label:'Planlayıcı',icon:'<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'},
+  {id:'whywall',label:'Why Wall',icon:'<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>'},
+  {id:'timemachine',label:'Zaman Makinesi',icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'},
+  {id:'settings',label:'Ayarlar',icon:'<circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42"/><path d="M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'}
+];
 
 function renderSidebar() {
-    const order = appData.sidebar_order || DEFAULT_ORDER;
-    const nav = document.getElementById('sidebar-nav');
-    nav.innerHTML = order.map(name => {
-        const icon = TAB_ICONS[name] || '';
-        return `<button onclick="switchTab('${name}')" class="tab-btn text-left px-3 py-2.5 flex items-center gap-3 rounded-xl text-sm text-white/50 hover:bg-white/5 transition w-full" id="tab-btn-${name}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icon}</svg><span>${TAB_LABELS[name]||name}</span></button>`;
-    }).join('');
+  const nav = document.getElementById('sidebar-nav');
+  nav.innerHTML = MENU.map(m => `
+    <button onclick="switchTab('${m.id}')" class="sidebar-item ${activeTab===m.id?'active':''}" id="sb-${m.id}">
+      <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${m.icon}</svg>
+      <span class="menu-text">${m.label}</span>
+    </button>
+  `).join('');
 }
 
-function switchTab(name) {
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    const tab = document.getElementById('tab-'+name);
-    const btn = document.getElementById('tab-btn-'+name);
-    if (tab) tab.classList.remove('hidden');
-    if (btn) btn.classList.add('active');
-    if (name === 'dashboard') loadDashboard();
-    if (name === 'study') loadStudyList();
-    if (name === 'yks') loadYKS();
-    if (name === 'coach') scrollCoachBottom();
-    if (name === 'sleep') loadSleepList();
-    if (name === 'focus') loadFocusList();
-    if (name === 'youtube') loadYTList();
-    if (name === 'notes') loadNotesList();
-    if (name === 'planner') loadTaskList();
-    closeMobileMenu();
+function switchTab(id) {
+  activeTab = id;
+  DATA.settings.activeTab = id;
+  save();
+  renderSidebar();
+  renderContent();
+  closeSidebar();
 }
 
-function refreshAll() {
-    const activeTab = document.querySelector('.tab-content:not(.hidden)')?.id?.replace('tab-','');
-    if (activeTab === 'dashboard' || !activeTab) loadDashboard();
-    if (activeTab === 'yks') loadYKS();
-    if (activeTab === 'study') loadStudyList();
-    if (activeTab === 'sleep') loadSleepList();
-    if (activeTab === 'focus') loadFocusList();
-    if (activeTab === 'youtube') loadYTList();
-    if (activeTab === 'notes') loadNotesList();
-    if (activeTab === 'planner') loadTaskList();
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('open');
+  document.getElementById('mobile-overlay').classList.toggle('hidden', !sb.classList.contains('open'));
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('mobile-overlay').classList.add('hidden');
 }
 
-// ═══════ MOBILE ═══════
-function toggleMobileMenu(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('mobile-backdrop').classList.toggle('hidden'); }
-function closeMobileMenu(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('mobile-backdrop').classList.add('hidden'); }
-
-// ═══════ CLOCK ═══════
+// ═══════════ HEADER ═══════════
 function updateClock() {
-    const d = new Date();
-    document.getElementById('live-clock').textContent = 
-        String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' | '+
-        d.getDate()+' '+['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][d.getMonth()]+' '+
-        d.getFullYear();
+  const d = new Date();
+  document.getElementById('header-time').textContent = 
+    String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('header-date').textContent = 
+    d.getDate()+' '+['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][d.getMonth()]+' '+
+    d.getFullYear()+', '+['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'][d.getDay()];
 }
-setInterval(updateClock, 30000); updateClock();
+setInterval(updateClock, 10000); updateClock();
 
-// ═══════ AVATAR ═══════
-async function loadAvatar() {
-    const img = document.getElementById('avatar-img');
-    const ph = document.getElementById('avatar-placeholder');
-    if (!img||!ph) return;
-    if (!user) { img.classList.add('hidden'); ph.classList.remove('hidden'); return; }
-    const data = await sbQuery(sb.from('profiles').select('avatar_url').eq('user_id',user.id).limit(1),'avatar');
-    if (data?.[0]?.avatar_url) { img.src=data[0].avatar_url; img.classList.remove('hidden'); ph.classList.add('hidden'); }
-    else { img.classList.add('hidden'); ph.classList.remove('hidden'); }
+// ═══════════ AVATAR ═══════════
+function loadAvatar() {
+  const src = LS.get('avatar', '');
+  if (src) {
+    document.getElementById('avatar-img').src = src;
+    document.getElementById('avatar-img').classList.remove('hidden');
+    document.getElementById('avatar-svg').classList.add('hidden');
+  }
 }
-
-async function handleAvatarUpload(e) {
-    const file = e.target.files[0];
-    if (!file || !user) return;
-    if (file.size > 5 * 1024 * 1024) { alert('Dosya çok büyük (max 5MB)!'); return; }
-    if (!file.type.startsWith('image/')) { alert('Sadece resim dosyası!'); return; }
-    const reader = new FileReader();
-    reader.onerror = function() { alert('Dosya okunamadı!'); };
-    reader.onload = async function(ev) {
-        try {
-            const img = new Image();
-            img.onerror = function() { alert('Resim bozuk veya geçersiz!'); };
-            img.onload = async function() {
-                const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
-                const max = 300, r = Math.min(max / img.width, max / img.height, 1);
-                canvas.width = Math.round(img.width * r);
-                canvas.height = Math.round(img.height * r);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const b64 = canvas.toDataURL('image/jpeg', 0.8);
-                const result = await sbQuery(sb.from('profiles').upsert({user_id: user.id, avatar_url: b64}, {onConflict: 'user_id'}), 'avatar save');
-                if (result !== null) {
-                    document.getElementById('avatar-img').src = b64;
-                    document.getElementById('avatar-img').classList.remove('hidden');
-                    document.getElementById('avatar-placeholder').classList.add('hidden');
-                    localStorage.setItem('seeos_avatar', b64);
-                } else {
-                    alert('Profil fotoğrafı kaydedilemedi. Lütfen tekrar deneyin.');
-                }
-            };
-            img.src = ev.target.result;
-        } catch(err) {
-            alert('Yükleme hatası: ' + err.message);
-        }
+function uploadAvatar(e) {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      const c = document.createElement('canvas'), x = c.getContext('2d');
+      const s = Math.min(200/img.width, 200/img.height, 1);
+      c.width = img.width*s; c.height = img.height*s;
+      x.drawImage(img, 0, 0, c.width, c.height);
+      const b64 = c.toDataURL('image/jpeg', 0.8);
+      LS.set('avatar', b64);
+      loadAvatar();
     };
-    reader.readAsDataURL(file);
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+}
+loadAvatar();
+
+// ═══════════ CONTENT RENDERER ═══════════
+function renderContent() {
+  const main = document.getElementById('main-content');
+  switch(activeTab) {
+    case 'dashboard': main.innerHTML = renderDashboard(); break;
+    case 'coach': main.innerHTML = renderCoach(); break;
+    case 'yks': main.innerHTML = renderYKS(); break;
+    case 'study': main.innerHTML = renderStudy(); break;
+    case 'sleep': main.innerHTML = renderSleep(); break;
+    case 'health': main.innerHTML = renderHealth(); break;
+    case 'youtube': main.innerHTML = renderYouTube(); break;
+    case 'notes': main.innerHTML = renderNotes(); break;
+    case 'planner': main.innerHTML = renderPlanner(); break;
+    case 'whywall': main.innerHTML = renderWhyWall(); break;
+    case 'timemachine': main.innerHTML = renderTimeMachine(); break;
+    case 'settings': main.innerHTML = renderSettings(); break;
+    default: main.innerHTML = renderDashboard();
+  }
+  // Init charts after DOM update
+  setTimeout(initCharts, 200);
 }
 
-// ═══════ DASHBOARD ═══════
-async function loadDashboard() {
-    if (!user) {
-        document.getElementById('dash-empty').classList.remove('hidden');
-        document.getElementById('kpi-grid').innerHTML = '';
-        document.getElementById('study-list-inner').innerHTML = '';
-        document.getElementById('sleep-card-inner').textContent = 'Giriş yapın';
-        return;
+// ═══════════ DASHBOARD ═══════════
+function renderDashboard() {
+  const sleep = DATA.sleep, study = DATA.study, health = DATA.health, notes = DATA.notes.slice(0,3), tasks = DATA.tasks;
+  const sleepAvg = (sleep.reduce((s,r)=>s+r.hours,0)/sleep.length).toFixed(1);
+  const studyTotal = study.reduce((s,r)=>s+r.hours,0).toFixed(1);
+  
+  return `
+    <div class="space-y-6 slide-in">
+      <!-- KPI Row -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        ${kpiCard('😴 Uyku Ort.', sleepAvg+'s', '#ff1a1a')}
+        ${kpiCard('📚 Çalışma', studyTotal+'s', '#0066ff')}
+        ${kpiCard('👟 Adım', health.steps.toLocaleString(), '#00e676')}
+        ${kpiCard('🔥 Kalori', health.calories+' kcal', '#ff6b00')}
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="glass p-5">
+          <h3 class="text-sm font-semibold text-white/70 mb-4">📉 7 Günlük Uyku</h3>
+          <div class="chart-wrap" style="height:220px"><canvas id="sleepChart"></canvas></div>
+        </div>
+        <div class="glass p-5">
+          <h3 class="text-sm font-semibold text-white/70 mb-4">📊 Çalışma Saatleri</h3>
+          <div class="chart-wrap" style="height:220px"><canvas id="studyChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Health + Notes + Kanban -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="glass p-5">
+          <h3 class="text-sm font-semibold text-white/70 mb-4">❤️ Sağlık Halkaları</h3>
+          <div class="flex justify-around">
+            ${ringCard('Adım', health.steps, 10000, '#00e676', 'stepsRing')}
+            ${ringCard('Su (ml)', health.water, 2500, '#0066ff', 'waterRing')}
+            ${ringCard('Kalori', health.calories, 2500, '#ff6b00', 'calRing')}
+          </div>
+        </div>
+        <div class="glass p-5">
+          <h3 class="text-sm font-semibold text-white/70 mb-3">📝 Hızlı Notlar</h3>
+          <div class="space-y-3">
+            ${notes.map(n=>`<div class="p-3 rounded-xl glass-light" style="border-left:3px solid ${n.color}"><p class="text-xs font-semibold text-white/80">${n.title}</p><p class="text-[11px] text-white/40 mt-1 line-clamp-2">${n.content}</p></div>`).join('')}
+          </div>
+        </div>
+        <div class="glass p-5">
+          <h3 class="text-sm font-semibold text-white/70 mb-3">📋 Mini Kanban</h3>
+          <div class="space-y-2">
+            ${tasks.map(t=>`<div class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs glass-light"><span class="text-[10px] px-1.5 py-0.5 rounded-full ${t.status==='done'?'bg-green-500/20 text-green-400':t.status==='in_progress'?'bg-orange-500/20 text-orange-400':'bg-white/5 text-white/30'}">${t.status==='done'?'✓':t.status==='in_progress'?'▶':'○'}</span><span class="text-white/60 ${t.status==='done'?'line-through opacity-40':''}">${t.title}</span></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function kpiCard(label, value, color) {
+  return `<div class="glass p-4 hover:border-white/10 transition"><p class="text-[10px] text-white/30 uppercase tracking-wider mb-1">${label}</p><p class="text-2xl font-bold" style="color:${color}">${value}</p></div>`;
+}
+
+function ringCard(label, value, max, color, id) {
+  const pct = Math.min(value/max*100, 100);
+  const circumference = 2 * Math.PI * 36;
+  const offset = circumference - (pct/100) * circumference;
+  return `<div class="text-center"><svg width="90" height="90" viewBox="0 0 90 90"><circle cx="45" cy="45" r="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/><circle id="${id}" cx="45" cy="45" r="36" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}" class="ring-fg" transform="rotate(-90 45 45)"/><text x="45" y="48" text-anchor="middle" fill="white" font-size="14" font-weight="700">${Math.round(pct)}%</text></svg><p class="text-[10px] text-white/30 mt-1">${label}</p></div>`;
+}
+
+// ═══════════ OTHER TABS ═══════════
+function renderCoach() {
+  return `<div class="space-y-6 slide-in"><div class="glass p-8 text-center"><p class="text-6xl mb-4">🤖</p><h2 class="text-xl font-bold text-white/80 mb-2">AI Koç</h2><p class="text-sm text-white/40">DeepSeek API entegrasyonu yakında.</p><p class="text-xs text-white/20 mt-4">Ayarlar'dan API key ekleyin.</p></div></div>`;
+}
+
+function renderYKS() {
+  const tyt = new Date('2026-06-20T10:15:00');
+  const ayt = new Date('2026-06-21T10:15:00');
+  const now = new Date();
+  const fmt = ms => ms<=0?'🎉 SINAV GÜNÜ!':Math.floor(ms/86400000)+'g '+Math.floor((ms%86400000)/3600000)+'s';
+  
+  return `<div class="space-y-6 slide-in">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="glass p-6 text-center"><p class="text-xs text-white/30 mb-2">TYT'ye Kalan</p><p class="text-4xl font-black neon-text">${fmt(tyt-now)}</p><p class="text-[10px] text-white/20 mt-2">20 Haziran 2026</p></div>
+      <div class="glass p-6 text-center"><p class="text-xs text-white/30 mb-2">AYT'ye Kalan</p><p class="text-4xl font-black text-green-400" style="text-shadow:0 0 10px rgba(0,230,118,0.4)">${fmt(ayt-now)}</p><p class="text-[10px] text-white/20 mt-2">21 Haziran 2026</p></div>
+    </div>
+    <div class="glass p-5"><h3 class="text-sm font-semibold text-white/70 mb-4">📈 Konu Takip</h3><div class="grid grid-cols-3 gap-2 text-center text-xs">${['TYT Mat','AYT Fizik','TYT Türkçe','AYT Kimya','TYT Sosyal','AYT Biyo','Geometri','Problemler','Paragraf'].map(s=>`<div class="p-3 rounded-xl glass-light"><p class="text-white/60">${s}</p><div class="mt-2 h-1 rounded-full bg-white/5"><div class="h-full rounded-full" style="width:${40+Math.random()*50}%;background:#ff1a1a"></div></div></div>`).join('')}</div></div>
+  </div>`;
+}
+
+function renderStudy() {
+  return `<div class="space-y-6 slide-in">
+    <div class="glass p-5"><h3 class="text-sm font-semibold text-white/70 mb-4">📊 Ders Bazlı Çalışma</h3><div class="chart-wrap" style="height:300px"><canvas id="studyBarChart"></canvas></div></div>
+    <div class="glass p-5"><h3 class="text-sm font-semibold text-white/70 mb-3">📝 Son Seanslar</h3><div class="space-y-2">${DATA.study.map(s=>`<div class="flex justify-between items-center px-4 py-2 rounded-lg glass-light text-sm"><span class="text-white/70">${s.subject}</span><span class="text-white/40">${s.hours}s</span><span class="text-white/20 text-xs">Odak: ${s.focus}/10</span></div>`).join('')}</div></div>
+  </div>`;
+}
+
+function renderSleep() {
+  return `<div class="space-y-6 slide-in">
+    <div class="glass p-5"><h3 class="text-sm font-semibold text-white/70 mb-4">📉 Uyku Trendi</h3><div class="chart-wrap" style="height:300px"><canvas id="sleepTrendChart"></canvas></div></div>
+    <div class="glass p-5"><h3 class="text-sm font-semibold text-white/70 mb-3">📋 Kayıtlar</h3><div class="space-y-2">${DATA.sleep.map(s=>`<div class="flex justify-between items-center px-4 py-2 rounded-lg glass-light text-sm"><span class="text-white/70">${s.date}</span><span class="text-white/40">${s.hours}s</span><span style="color:${s.quality>=7?'#00e676':s.quality>=5?'#ff6b00':'#ff1a1a'}">⭐${s.quality}</span></div>`).join('')}</div></div>
+  </div>`;
+}
+
+function renderHealth() {
+  const h = DATA.health;
+  return `<div class="space-y-6 slide-in">
+    <div class="grid grid-cols-3 gap-4">${[
+      {label:'Adım',val:h.steps,max:10000,unit:'adım',color:'#00e676'},
+      {label:'Su',val:h.water,max:2500,unit:'ml',color:'#0066ff'},
+      {label:'Kalori',val:h.calories,max:2500,unit:'kcal',color:'#ff6b00'}
+    ].map(r=>`<div class="glass p-5 text-center"><p class="text-[10px] text-white/30 mb-2">${r.label}</p><p class="text-3xl font-bold" style="color:${r.color}">${r.val}</p><p class="text-[10px] text-white/20">/ ${r.max} ${r.unit}</p><div class="mt-2 h-1.5 rounded-full bg-white/5"><div class="h-full rounded-full" style="width:${Math.min(r.val/r.max*100,100)}%;background:${r.color}"></div></div></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderYouTube() {
+  return `<div class="space-y-6 slide-in">
+    <div class="glass p-5 max-w-lg"><h3 class="text-sm font-semibold text-white/70 mb-3">🔍 Video Ara</h3><div class="flex gap-2"><input id="yt-search" placeholder="Arama terimi..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white/70 outline-none focus:border-red-500/50 transition" onkeypress="if(event.key==='Enter')document.getElementById('yt-search-btn')?.click()"><button id="yt-search-btn" onclick="searchYouTube()" class="px-5 py-2.5 rounded-xl font-semibold text-sm" style="background:rgba(255,26,26,0.15);color:#ff1a1a">🔍 Ara</button></div></div>
+    <div class="glass p-5"><div class="aspect-video rounded-xl overflow-hidden bg-black"><iframe id="yt-player" class="w-full h-full" allow="autoplay; encrypted-media" allowfullscreen></iframe></div></div>
+  </div>`;
+}
+
+function renderNotes() {
+  return `<div class="space-y-6 slide-in">
+    <div class="flex gap-2"><input id="note-title" placeholder="Yeni not başlığı..." class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white/70 outline-none focus:border-red-500/50"><button onclick="addNote()" class="px-5 py-2.5 rounded-xl font-semibold text-sm bg-red-500/15 text-red-400 hover:bg-red-500/25 transition">➕ Ekle</button></div>
+    <div id="notes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${DATA.notes.map((n,i)=>`
+      <div class="glass p-4" style="border-left:4px solid ${n.color}">
+        <div class="flex justify-between items-start mb-2"><h4 class="font-semibold text-sm text-white/80">${n.title}</h4><button onclick="deleteNote(${i})" class="text-xs text-white/20 hover:text-red-400">🗑</button></div>
+        <textarea class="w-full bg-transparent text-xs text-white/50 resize-none outline-none" rows="4" onchange="updateNote(${i},this.value)">${n.content}</textarea>
+      </div>`).join('')}</div>
+  </div>`;
+}
+
+function renderPlanner() {
+  const cols = {todo:'Yapılacak',in_progress:'Devam Eden',done:'Tamamlandı'};
+  const colors = {todo:'border-white/10',in_progress:'border-orange-500/30',done:'border-green-500/20'};
+  return `<div class="space-y-6 slide-in">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      ${Object.entries(cols).map(([status,label])=>`<div class="glass p-4 kanban-col border-t-2 ${colors[status]}"><h3 class="text-xs font-semibold text-white/50 mb-3 uppercase tracking-wider">${label}</h3><div class="space-y-2">${DATA.tasks.filter(t=>t.status===status).map(t=>`<div class="kanban-card p-3 rounded-xl glass-light text-sm"><span class="text-white/70">${t.title}</span><div class="flex gap-2 mt-2">${status!=='todo'?`<button onclick="moveTask(${t.id},'${status==='in_progress'?'todo':'in_progress'}')" class="text-[10px] text-white/20 hover:text-white/40">◀</button>`:''}${status!=='done'?`<button onclick="moveTask(${t.id},'${status==='todo'?'in_progress':'done'}')" class="text-[10px] text-white/20 hover:text-green-400">▶</button>`:''}</div></div>`).join('')}</div></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderWhyWall() {
+  return `<div class="space-y-6 slide-in"><div class="glass p-8 text-center"><h2 class="text-xl font-bold neon-text mb-6">🧱 Why Wall</h2><div class="space-y-4">${DATA.whywalls.map(w=>`<div class="p-5 rounded-2xl glass-light text-left"><p class="text-sm text-white/70 italic">${w}</p></div>`).join('')}</div><button onclick="addWhy()" class="mt-6 px-6 py-3 rounded-xl bg-red-500/10 text-red-400 text-sm hover:bg-red-500/20 transition">+ Yeni Neden</button></div></div>`;
+}
+
+function renderTimeMachine() {
+  return `<div class="space-y-6 slide-in"><div class="glass p-8 text-center"><p class="text-6xl mb-4">⏰</p><h2 class="text-xl font-bold text-white/80 mb-2">Zaman Makinesi</h2><p class="text-sm text-white/40">Geçmiş günlük özetler ve istatistikler yakında.</p></div></div>`;
+}
+
+function renderSettings() {
+  return `<div class="space-y-6 slide-in max-w-md">
+    <div class="glass p-6">
+      <h3 class="text-sm font-semibold text-white/70 mb-4">⚙️ Ayarlar</h3>
+      <label class="block text-xs text-white/40 mb-1">Kullanıcı Adı</label>
+      <input id="set-name" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white/70 outline-none mb-4" value="${LS.get('username','Kayger')}" onchange="LS.set('username',this.value)">
+      <label class="block text-xs text-white/40 mb-1">DeepSeek API Key</label>
+      <input id="set-apikey" type="password" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white/70 outline-none mb-4" placeholder="sk-..." value="${LS.get('deepseek_key','')}" onchange="LS.set('deepseek_key',this.value)">
+      <button onclick="resetData()" class="w-full py-3 rounded-xl text-sm font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition mt-2">🔄 Verileri Sıfırla</button>
+    </div>
+  </div>`;
+}
+
+// ═══════════ CHARTS ═══════════
+function initCharts() {
+  Object.values(charts).forEach(c=>c.destroy());
+  charts = {};
+  
+  if (activeTab === 'dashboard') {
+    const sleepCtx = document.getElementById('sleepChart')?.getContext('2d');
+    if (sleepCtx) {
+      charts.sleep = new Chart(sleepCtx, {
+        type:'line', data:{labels:DATA.sleep.map(s=>s.date),datasets:[
+          {label:'Saat',data:DATA.sleep.map(s=>s.hours),borderColor:'#ff1a1a',backgroundColor:'rgba(255,26,26,0.08)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'#ff1a1a'},
+          {label:'Kalite',data:DATA.sleep.map(s=>s.quality),borderColor:'#ff6b00',backgroundColor:'transparent',tension:0.4,pointRadius:3,pointBackgroundColor:'#ff6b00',yAxisID:'y1'}
+        ]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,0.4)',font:{size:10}}}},scales:{y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(255,255,255,0.3)',font:{size:10}}},y1:{position:'right',max:10,grid:{display:false},ticks:{color:'rgba(255,255,255,0.2)',font:{size:10}}},x:{ticks:{color:'rgba(255,255,255,0.3)',font:{size:10}}}}}
+      });
     }
-    document.getElementById('dash-empty').classList.add('hidden');
     
-    const [sessions, sleepData] = await Promise.all([
-        sbQuery(sb.from('study_sessions').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(100),'dashboard'),
-        sbQuery(sb.from('sleep_records').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(1),'sleep card')
-    ]);
-    
-    const total = sessions?.length || 0;
-    const totalMin = sessions?.reduce((s,r)=>s+(r.duration_minutes||0),0) || 0;
-    const today = new Date().toISOString().split('T')[0];
-    const todaySessions = sessions?.filter(s=>s.created_at?.startsWith(today)) || [];
-    const todayMin = todaySessions.reduce((s,r)=>s+(r.duration_minutes||0),0);
-    const avgFocus = sessions?.length ? Math.round(sessions.reduce((s,r)=>s+(r.focus_score||7),0)/sessions.length) : 0;
-    
-    document.getElementById('kpi-grid').innerHTML = [
-        {label:'Toplam Seans',val:total,color:'#007AFF'},
-        {label:'Toplam Süre',val:Math.round(totalMin/60)+'s',color:'#34C759'},
-        {label:'Bugün',val:todayMin+'dk',color:'#FF9500'},
-        {label:'Ort. Odak',val:avgFocus+'/10',color:'#AF52DE'}
-    ].map(k=>`<div class="glass p-4"><p class="text-xs text-white/40 mb-1">${k.label}</p><p class="text-2xl font-bold" style="color:${k.color}">${k.val}</p></div>`).join('');
-    
-    const recent = sessions?.slice(0,8) || [];
-    document.getElementById('study-list-inner').innerHTML = recent.length 
-        ? recent.map(s=>`<div class="flex justify-between items-center px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><span>${s.subject_name}</span><span class="text-white/40">${s.duration_minutes}dk</span></div>`).join('')
-        : '<p class="text-white/25 text-xs">Henüz kayıt yok</p>';
-    
-    const lastSleep = sleepData?.[0];
-    if (lastSleep && lastSleep.wake_time) {
-        const sleepT = new Date(lastSleep.sleep_time), wakeT = new Date(lastSleep.wake_time);
-        const hrs = ((wakeT - sleepT) / 3600000).toFixed(1);
-        document.getElementById('sleep-card-inner').innerHTML = `🛏 ${sleepT.toLocaleDateString('tr-TR')}<br>⏱ ${hrs} saat — Kalite: ${lastSleep.quality || '?'}/10`;
-    } else {
-        document.getElementById('sleep-card-inner').textContent = 'Henüz uyku kaydı yok';
-    loadWeeklyChart();
+    const studyCtx = document.getElementById('studyChart')?.getContext('2d');
+    if (studyCtx) {
+      charts.study = new Chart(studyCtx, {
+        type:'bar', data:{labels:DATA.study.map(s=>s.subject.split(' ')[0]),datasets:[
+          {label:'Saat',data:DATA.study.map(s=>s.hours),backgroundColor:DATA.study.map((_,i)=>['rgba(255,26,26,0.6)','rgba(255,107,0,0.5)','rgba(0,102,255,0.5)','rgba(0,230,118,0.5)','rgba(183,0,255,0.5)','rgba(255,0,110,0.5)'][i%6]),borderRadius:8}
+        ]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(255,255,255,0.3)',font:{size:10}}},x:{ticks:{color:'rgba(255,255,255,0.3)',font:{size:10}}}}}
+      });
     }
-}
-
-// ═══════ YKS ═══════
-function updateYKSCountdown() {
-    const tyt = new Date('2026-06-20T10:15:00+03:00');
-    const ayt = new Date('2026-06-21T10:15:00+03:00');
-    const now = new Date();
     
-    function fmt(ms) {
-        if (ms <= 0) return '🎉 SINAV GÜNÜ!';
-        const days = Math.floor(ms/86400000);
-        const hrs = Math.floor((ms%86400000)/3600000);
-        return days+'g '+hrs+'s';
-    }
-    document.getElementById('yks-tyt-countdown').textContent = fmt(tyt - now);
-    document.getElementById('yks-ayt-countdown').textContent = fmt(ayt - now);
-}
-setInterval(updateYKSCountdown, 60000); updateYKSCountdown();
-
-async function loadYKS() {
-    if (!user) return;
-    const data = await sbQuery(sb.from('yks_progress').select('*').eq('user_id',user.id).order('date',{ascending:false}).limit(30),'yks');
-    const el = document.getElementById('yks-progress-list');
-    if (!data?.length) { el.innerHTML = '<p class="text-white/25 text-xs">Henüz net kaydı yok</p>'; return; }
-    el.innerHTML = data.map(r=>{
-        const net = (r.correct||0) - ((r.wrong||0)/4);
-        return `<div class="flex justify-between items-center px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><span>${r.exam_type} ${r.subject} ${r.topic||''}</span><span class="text-white/40">${r.correct}D ${r.wrong}Y</span><span class="font-semibold" style="color:${net>=0?'#34C759':'#FF3B30'}">${net.toFixed(1)} net</span></div>`;
-    }).join('');
+    // Animate rings
+    document.querySelectorAll('.ring-fg').forEach(r=>{
+      const orig = r.getAttribute('stroke-dashoffset');
+      r.style.strokeDashoffset = r.getAttribute('stroke-dasharray');
+      setTimeout(()=>r.style.strokeDashoffset=orig, 100);
+    });
+  }
+  
+  if (activeTab === 'study') {
+    const ctx = document.getElementById('studyBarChart')?.getContext('2d');
+    if (ctx) charts.studyBar = new Chart(ctx,{type:'bar',data:{labels:DATA.study.map(s=>s.subject),datasets:[{label:'Saat',data:DATA.study.map(s=>s.hours),backgroundColor:'rgba(255,26,26,0.5)',borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(255,255,255,0.3)'}},y:{ticks:{color:'rgba(255,255,255,0.3)',font:{size:10}}}}}});
+  }
+  
+  if (activeTab === 'sleep') {
+    const ctx = document.getElementById('sleepTrendChart')?.getContext('2d');
+    if (ctx) charts.sleepTrend = new Chart(ctx,{type:'line',data:{labels:DATA.sleep.map(s=>s.date),datasets:[{label:'Saat',data:DATA.sleep.map(s=>s.hours),borderColor:'#ff1a1a',backgroundColor:'rgba(255,26,26,0.1)',fill:true,tension:0.4,pointRadius:5,pointBackgroundColor:'#ff1a1a'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(255,255,255,0.3)'}},x:{ticks:{color:'rgba(255,255,255,0.3)'}}}}});
+  }
 }
 
-async function loadYKSAnalysis() {
-    if (!user) return;
-    const data = await sbQuery(sb.from('yks_progress').select('*').eq('user_id',user.id).order('date',{ascending:false}).limit(100),'yks analysis');
-    const el = document.getElementById('yks-analysis');
-    if (!el || !data?.length) { if(el) el.innerHTML='<p class="text-white/25 text-xs">Henüz net kaydı yok</p>'; return; }
-    const bySubject = {};
-    data.forEach(r=>{ const key=r.subject; if(!bySubject[key]) bySubject[key]={correct:0,wrong:0,total:0,count:0,exam:r.exam_type}; bySubject[key].correct+=r.correct||0; bySubject[key].wrong+=r.wrong||0; bySubject[key].total+=r.total||0; bySubject[key].count++; });
-    el.innerHTML = Object.entries(bySubject).map(([k,v])=>{const net=v.correct-(v.wrong/4);const pct=v.total>0?Math.round(v.correct/v.total*100):0;const color=net>=0?'#34C759':'#FF3B30';return `<div class="flex justify-between items-center px-3 py-2 rounded-lg" style="background:rgba(255,255,255,0.03)"><span class="text-white/70 text-xs">${v.exam} ${k}</span><span class="text-white/40 text-xs">${v.count} deneme</span><span class="font-semibold text-xs" style="color:${color}">${net.toFixed(1)} net (%${pct})</span></div>`;}).join('');
-}
-async function addYKSProgress() {
-    if (!user) return alert('Önce giriş yapın!');
-    const subject = document.getElementById('yks-subject').value.trim();
-    const topic = document.getElementById('yks-topic').value.trim();
-    const correct = parseInt(document.getElementById('yks-correct').value) || 0;
-    const wrong = parseInt(document.getElementById('yks-wrong').value) || 0;
-    const examType = document.getElementById('yks-type').value;
-    if (!subject) return alert('Ders adı girin!');
-    const total = correct + wrong;
-    await sbQuery(sb.from('yks_progress').insert({user_id:user.id,subject,topic,correct,wrong,total,exam_type:examType}),'yks add');
-    document.getElementById('yks-subject').value='';
-    document.getElementById('yks-topic').value='';
-    document.getElementById('yks-correct').value='0';
-    document.getElementById('yks-wrong').value='0';
-    loadYKS();
+// ═══════════ ACTIONS ═══════════
+function searchYouTube() {
+  const q = document.getElementById('yt-search')?.value.trim();
+  if (!q) return;
+  window.open('https://www.youtube.com/results?search_query='+encodeURIComponent(q),'_blank');
 }
 
-// ═══════ STUDY SESSIONS ═══════
-async function addStudySession() {
-    if (!user) return alert('Önce giriş yapın!');
-    const subject = document.getElementById('study-subject').value.trim();
-    const duration = parseInt(document.getElementById('study-duration').value);
-    const focus = parseInt(document.getElementById('study-focus').value) || 7;
-    if (!subject||!duration) return alert('Tüm alanları doldurun!');
-    await sbQuery(sb.from('study_sessions').insert({user_id:user.id,subject_name:subject,duration_minutes:duration,focus_score:focus}),'add study');
-    document.getElementById('study-subject').value='';
-    document.getElementById('study-duration').value='60';
-    loadStudyList();
-    loadDashboard();
+function addNote() {
+  const title = document.getElementById('note-title')?.value.trim();
+  if (!title) return;
+  DATA.notes.push({id:Date.now(),title,content:'',color:['#ff1a1a','#ff6b00','#0066ff','#00e676','#b700ff'][Math.floor(Math.random()*5)]});
+  save(); renderContent();
 }
 
-async function loadWeeklyChart() {
-    if (!user) return;
-    const weekAgo = new Date(Date.now() - 7*86400000).toISOString();
-    const sessions = await sbQuery(sb.from('study_sessions').select('*').eq('user_id',user.id).gte('created_at',weekAgo).order('created_at'),'weekly');
-    if (!sessions?.length) return;
-    const days = {};
-    for (let d=6;d>=0;d--) { const k=new Date(Date.now()-d*86400000).toLocaleDateString('tr-TR',{weekday:'short'}); days[k]=0; }
-    sessions.forEach(s=>{ const k=new Date(s.created_at).toLocaleDateString('tr-TR',{weekday:'short'}); days[k]=(days[k]||0)+(s.duration_minutes||0); });
-    const ctx=document.getElementById('weeklyChart')?.getContext('2d');
-    if(!ctx) return;
-    new Chart(ctx,{type:'line',data:{labels:Object.keys(days),datasets:[{label:'dk',data:Object.values(days),borderColor:'#007AFF',backgroundColor:'rgba(0,122,255,0.1)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'#007AFF'}]},options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'rgba(255,255,255,0.3)'}},x:{ticks:{color:'rgba(255,255,255,0.3)'}}},responsive:true}});
-}
-async function loadStudyList() {
-    if (!user) return;
-    const sessions = await sbQuery(sb.from('study_sessions').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(20),'study list');
-    const el = document.getElementById('study-session-list');
-    el.innerHTML = sessions?.length 
-        ? sessions.map(s=>`<div class="flex justify-between items-center px-4 py-2 rounded-xl text-sm" style="background:rgba(255,255,255,0.03)"><span class="text-white/80">${s.subject_name}</span><span class="text-white/50">${s.duration_minutes}dk</span><span class="text-white/40 text-xs">Odak:${s.focus_score||7}/10</span><span class="text-white/25 text-xs">${new Date(s.created_at).toLocaleDateString('tr-TR')}</span></div>`).join('')
-        : '<p class="text-white/25 text-sm py-2">Henüz kayıt yok.</p>';
+function updateNote(idx, content) { DATA.notes[idx].content = content; save(); }
+function deleteNote(idx) { DATA.notes.splice(idx,1); save(); renderContent(); }
+
+function moveTask(id, newStatus) {
+  const t = DATA.tasks.find(t=>t.id===id);
+  if (t) { t.status = newStatus; save(); renderContent(); }
 }
 
-// ═══════ POMODORO ═══════
-let pomWork=25, pomBreak=5, pomSeconds=25*60, pomInterval=null, pomRunning=false;
-function setPomodoro(w,b) { pomWork=w; pomBreak=b; pomSeconds=w*60; updatePomDisplay(); document.getElementById('pomodoro-status').textContent='Hazır ('+w+'dk)'; }
-function updatePomDisplay() { const m=Math.floor(pomSeconds/60),s=pomSeconds%60; document.getElementById('pomodoro-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
-function startPomodoro() { if(pomRunning)return; pomRunning=true; document.getElementById('pom-start').textContent='▶'; pomInterval=setInterval(()=>{pomSeconds--;updatePomDisplay();if(pomSeconds<=0){clearInterval(pomInterval);pomRunning=false;document.getElementById('pomodoro-status').textContent='⏰ Mola zamanı!';}},1000); }
-function pausePomodoro() { clearInterval(pomInterval); pomRunning=false; }
-function resetPomodoro() { clearInterval(pomInterval); pomRunning=false; pomSeconds=pomWork*60; updatePomDisplay(); document.getElementById('pomodoro-status').textContent='Hazır'; }
-updatePomDisplay();
-
-// ═══════ AI COACH ═══════
-async function sendCoach() {
-    if (!user) return alert('Önce giriş yapın!');
-    const input = document.getElementById('coach-input');
-    const msg = input.value.trim();
-    if (!msg) return;
-    input.value = '';
-    
-    addCoachMessage('user', msg);
-    await sbQuery(sb.from('coach_chats').insert({user_id:user.id,role:'user',content:msg}),'coach user');
-    
-    const apiKey = appData.deepseek_key || 'sk-646...31f1';
-    const persona = appData.persona || 'Motivational';
-    const personaPrompts = {
-        Motivational: 'Sen motive edici bir YKS koçusun. Kısa, enerjik, Türkçe cevap ver.',
-        Savage: 'Sen acımasız dürüst bir koçsun. Sert ama yapıcı, kısa Türkçe cevap ver.',
-        Analytical: 'Sen analitik bir çalışma koçusun. Veri odaklı, stratejik, kısa Türkçe cevap ver.',
-        Buddy: 'Sen samimi bir dert ortağısın. Arkadaşça, rahat, kısa Türkçe cevap ver.'
-    };
-    
-    try {
-        const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-            body: JSON.stringify({
-                model: 'deepseek-chat',
-                messages: [
-                    {role:'system',content:personaPrompts[persona]||personaPrompts.Motivational},
-                    {role:'user',content:msg}
-                ],
-                max_tokens: 300
-            })
-        });
-        const data = await resp.json();
-        const reply = data.choices?.[0]?.message?.content || '⏳ Düşünüyorum...';
-        addCoachMessage('assistant', reply);
-        await sbQuery(sb.from('coach_chats').insert({user_id:user.id,role:'assistant',content:reply}),'coach bot');
-    } catch(e) {
-        addCoachMessage('assistant', '⚠️ Bağlantı hatası. API key doğru mu?');
-    }
+function addWhy() {
+  const w = prompt('Nedenini yaz:');
+  if (w) { DATA.whywalls.push(w); save(); renderContent(); }
 }
 
-function addCoachMessage(role, content) {
-    const container = document.getElementById('coach-messages');
-    const div = document.createElement('div');
-    div.className = 'chat-msg ' + (role === 'user' ? 'chat-user' : 'chat-bot');
-    div.textContent = content;
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+function resetData() {
+  if (confirm('Tüm veriler sıfırlansın mı?')) {
+    localStorage.clear();
+    DATA = defaultData();
+    save();
+    renderContent();
+  }
 }
 
-async function loadCoachHistory() {
-    if (!user) return;
-    const data = await sbQuery(sb.from('coach_chats').select('*').eq('user_id',user.id).order('created_at',{ascending:true}).limit(50),'coach hist');
-    const container = document.getElementById('coach-messages');
-    container.innerHTML = '<div class="chat-msg chat-bot">👋 Selam! Ben SeeOS AI Koç\'un. Ders çalışma, motivasyon, YKS stratejisi — ne hakkında konuşmak istersin?</div>';
-    if (data) data.forEach(m => addCoachMessage(m.role, m.content));
-}
-function scrollCoachBottom() {
-    const c = document.getElementById('coach-messages');
-    if (c) c.scrollTop = c.scrollHeight;
-}
-
-// ═══════ SLEEP ═══════
-async function addSleep() {
-    if (!user) return alert('Önce giriş yapın!');
-    const sleepTime = document.getElementById('sleep-time').value;
-    const wakeTime = document.getElementById('wake-time').value;
-    const quality = parseInt(document.getElementById('sleep-quality').value) || 7;
-    const notes = document.getElementById('sleep-note').value.trim();
-    if (!sleepTime) return alert('Uyku saati girin!');
-    const payload = {user_id:user.id, sleep_time:new Date(sleepTime).toISOString(), quality, notes};
-    if (wakeTime) payload.wake_time = new Date(wakeTime).toISOString();
-    await sbQuery(sb.from('sleep_records').insert(payload),'sleep add');
-    document.getElementById('sleep-time').value='';
-    document.getElementById('wake-time').value='';
-    document.getElementById('sleep-note').value='';
-    loadSleepList();
-    loadDashboard();
+// ═══════════ FOCUS BLAST ═══════════
+function startFocusBlast() {
+  focusTask = prompt('Ne üzerine odaklanacaksınız?', 'Deep Focus') || 'Deep Focus';
+  focusSeconds = 25 * 60;
+  focusRunning = true;
+  const overlay = document.getElementById('focus-overlay');
+  document.getElementById('focus-task-label').textContent = focusTask;
+  overlay.classList.remove('hidden');
+  updateFocusDisplay();
+  focusInterval = setInterval(() => {
+    focusSeconds--;
+    updateFocusDisplay();
+    if (focusSeconds <= 0) stopFocus();
+  }, 1000);
 }
 
-async function loadSleepList() {
-    if (!user) return;
-    const data = await sbQuery(sb.from('sleep_records').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(20),'sleep list');
-    const el = document.getElementById('sleep-list');
-    el.innerHTML = data?.length ? data.map(r=>{
-        const st = new Date(r.sleep_time), wt = r.wake_time ? new Date(r.wake_time) : null;
-        const hrs = wt ? ((wt-st)/3600000).toFixed(1) : '?';
-        return `<div class="flex justify-between items-center px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><span>${st.toLocaleDateString('tr-TR')}</span><span>${hrs}s</span><span>⭐${r.quality||'?'}</span>${r.notes?`<span class="text-white/30">${r.notes}</span>`:''}</div>`;
-    }).join('') : '<p class="text-white/25 text-xs">Henüz uyku kaydı yok</p>';
+function updateFocusDisplay() {
+  const m = Math.floor(focusSeconds/60), s = focusSeconds%60;
+  document.getElementById('focus-countdown').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
 }
 
-// ═══════ FOCUS BLAST ═══════
-async function loadSleepChart() {
-    if (!user) return;
-    const weekAgo = new Date(Date.now() - 7*86400000).toISOString();
-    const records = await sbQuery(sb.from('sleep_records').select('*').eq('user_id',user.id).gte('created_at',weekAgo).order('created_at'),'sleep chart');
-    const ctx = document.getElementById('sleepChart')?.getContext('2d');
-    if (!ctx || !records?.length) return;
-    const labels = records.map(r=>new Date(r.sleep_time).toLocaleDateString('tr-TR',{weekday:'short'}));
-    const qualities = records.map(r=>r.quality||0);
-    const colors = qualities.map(q=>q>=7?'rgba(52,199,89,0.7)':q>=4?'rgba(255,149,0,0.7)':'rgba(255,59,48,0.7)');
-    new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Kalite',data:qualities,backgroundColor:colors,borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{max:10,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'rgba(255,255,255,0.3)'}},x:{ticks:{color:'rgba(255,255,255,0.3)'}}},responsive:true}});
-}
-async function startFocusBlast() {
-    if (!user) return alert('Önce giriş yapın!');
-    if (focusActive) return;
-    const task = document.getElementById('focus-task').value.trim() || 'Odaklanma';
-    const duration = parseInt(document.getElementById('focus-duration').value) || 25;
-    focusSeconds = duration * 60;
-    focusActive = true;
-    
-    const resp = await sbQuery(sb.from('focus_blasts').insert({user_id:user.id,task,duration_minutes:duration}).select(),'blast start');
-    if (resp?.[0]) focusBlastId = resp[0].id;
-    
-    document.getElementById('focus-active').classList.remove('hidden');
-    document.getElementById('focus-task-name').textContent = task;
-    document.getElementById('focus-task').value = '';
-    updateFocusTimer();
-    focusInterval = setInterval(() => {
-        focusSeconds--;
-        updateFocusTimer();
-        if (focusSeconds <= 0) { clearInterval(focusInterval); focusActive = false; completeFocusBlast(); }
-    }, 1000);
+function pauseFocus() {
+  if (focusRunning) { clearInterval(focusInterval); focusRunning = false; }
+  else { focusRunning = true; focusInterval = setInterval(()=>{focusSeconds--;updateFocusDisplay();if(focusSeconds<=0)stopFocus();},1000); }
 }
 
-function updateFocusTimer() {
-    const m = Math.floor(focusSeconds/60), s = focusSeconds%60;
-    document.getElementById('focus-timer').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+function stopFocus() {
+  clearInterval(focusInterval);
+  focusRunning = false;
+  document.getElementById('focus-overlay').classList.add('hidden');
 }
 
-async function completeFocusBlast() {
-    clearInterval(focusInterval); focusActive = false;
-    document.getElementById('focus-active').classList.add('hidden');
-    if (focusBlastId) {
-        await sbQuery(sb.from('focus_blasts').update({completed:true}).eq('id',focusBlastId),'blast done');
-        focusBlastId = null;
-    }
-    loadFocusList();
+// ═══════════ PARTICLES ═══════════
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random()*100+'%';
+    p.style.animationDuration = (8+Math.random()*20)+'s';
+    p.style.animationDelay = Math.random()*10+'s';
+    p.style.width = (1+Math.random()*2)+'px';
+    p.style.height = p.style.width;
+    container.appendChild(p);
+  }
 }
 
-async function loadFocusList() {
-    if (!user) return;
-    const data = await sbQuery(sb.from('focus_blasts').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(20),'focus list');
-    const el = document.getElementById('focus-list');
-    el.innerHTML = data?.length ? data.map(r=>`<div class="flex justify-between items-center px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><span>${r.task}</span><span class="text-white/40">${r.duration_minutes}dk</span><span>${r.completed?'✅':'⏳'}</span></div>`).join('') : '<p class="text-white/25 text-xs">Henüz blast yok</p>';
+// ═══════════ INIT ═══════════
+function init() {
+  createParticles();
+  renderSidebar();
+  renderContent();
 }
 
-// ═══════ YOUTUBE ═══════
-function playVideo(videoId) {
-    document.getElementById('yt-player').src = 'https://www.youtube.com/embed/'+videoId+'?autoplay=1';
-    document.getElementById('yt-player-box').classList.remove('hidden');
-    document.getElementById('yt-player-box').scrollIntoView({behavior:'smooth'});
-}
-function searchYT() {
-    const query = document.getElementById('yt-search').value.trim();
-    if (!query) return alert('Arama terimi girin!');
-    window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(query), '_blank');
-}
-
-async function loadYTList() {
-    if (!user) return;
-    const data = await sbQuery(sb.from('youtube_history').select('*').eq('user_id',user.id).order('watched_at',{ascending:false}).limit(20),'yt list');
-    const el = document.getElementById('yt-list');
-    el.innerHTML = data?.length ? data.map(r=>{
-        const thumb = `https://i.ytimg.com/vi/${r.video_id}/default.jpg`;
-        return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><img src="${thumb}" class="w-16 h-9 rounded object-cover"><span class="flex-1 text-white/70 truncate">${r.title||r.video_id}</span><a href="https://youtube.com/watch?v=${r.video_id}" onclick="playVideo(\'${r.video_id}\')" style="cursor:pointer" class="text-apple-blue text-xs">▶</a></div>`;
-    }).join('') : '<p class="text-white/25 text-xs">Henüz video yok</p>';
-}
-
-// ═══════ NOTES ═══════
-async function addNote() {
-    if (!user) return alert('Önce giriş yapın!');
-    const title = document.getElementById('note-title').value.trim();
-    if (!title) return alert('Başlık girin!');
-    await sbQuery(sb.from('notes').insert({user_id:user.id,title,content:''}),'note add');
-    document.getElementById('note-title').value = '';
-    loadNotesList();
-}
-
-async function loadNotesList() {
-    if (!user) return;
-    const data = await sbQuery(sb.from('notes').select('*').eq('user_id',user.id).order('updated_at',{ascending:false}).limit(50),'notes');
-    const el = document.getElementById('notes-list');
-    if (!data?.length) { el.innerHTML = '<p class="text-white/25 text-sm col-span-full">Henüz not yok. Başlık yazıp ➕ tıkla.</p>'; return; }
-    el.innerHTML = data.map(n=>`<div class="glass p-4"><div class="flex justify-between items-start mb-2"><h4 class="font-semibold text-sm text-white/80">${n.title}</h4><div class="flex gap-1"><button onclick="editNote('${n.id}','${n.title.replace(/'/g,"\\'")}')" class="text-xs text-white/30 hover:text-white">✏</button><button onclick="deleteNote('${n.id}')" class="text-xs text-white/30 hover:text-red-400">🗑</button></div></div><textarea class="w-full bg-transparent border border-white/5 rounded-lg p-2 text-xs text-white/50 resize-none" rows="3" onchange="saveNoteContent('${n.id}',this.value)">${(n.content||'').replace(/</g,'&lt;')}</textarea><p class="text-[10px] text-white/20 mt-2">${new Date(n.updated_at||n.created_at).toLocaleDateString('tr-TR')}</p></div>`).join('');
-}
-
-async function saveNoteContent(id, content) {
-    await sbQuery(sb.from('notes').update({content,updated_at:new Date().toISOString()}).eq('id',id),'note save');
-}
-
-async function editNote(id, oldTitle) {
-    const title = prompt('Yeni başlık:', oldTitle);
-    if (title) { await sbQuery(sb.from('notes').update({title,updated_at:new Date().toISOString()}).eq('id',id),'note edit'); loadNotesList(); }
-}
-
-async function deleteNote(id) {
-    if (confirm('Notu sil?')) { await sbQuery(sb.from('notes').delete().eq('id',id),'note del'); loadNotesList(); }
-}
-
-// ═══════ PLANNER ═══════
-async function addTask() {
-    if (!user) return alert('Önce giriş yapın!');
-    const title = document.getElementById('task-title').value.trim();
-    const due = document.getElementById('task-due').value;
-    const priority = document.getElementById('task-priority').value;
-    if (!title) return alert('Görev adı girin!');
-    await sbQuery(sb.from('planner_tasks').insert({user_id:user.id,title,priority,due_date:due||null}),'task add');
-    document.getElementById('task-title').value = '';
-    document.getElementById('task-due').value = '';
-    loadTaskList();
-}
-
-async function loadTaskList() {
-    if (!user) return;
-    const data = await sbQuery(sb.from('planner_tasks').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(50),'tasks');
-    const el = document.getElementById('task-list');
-    if (!data?.length) { el.innerHTML = '<p class="text-white/25 text-xs">Henüz görev yok</p>'; return; }
-    const priorityEmoji = {low:'🟢',medium:'🟡',high:'🟠',urgent:'🔴'};
-    el.innerHTML = data.map(t=>`<div class="flex justify-between items-center px-4 py-2 rounded-xl text-sm ${t.status==='done'?'task-done':''}" style="background:rgba(255,255,255,0.03)"><span class="text-white/80">${priorityEmoji[t.priority]||''} ${t.title}</span><div class="flex gap-2 items-center">${t.due_date?`<span class="text-[10px] text-white/30">${new Date(t.due_date).toLocaleDateString('tr-TR')}</span>`:''}<button onclick="toggleTask('${t.id}','${t.status}')" class="text-xs btn-sm ${t.status==='done'?'bg-green-500/20 text-green-400':'bg-white/5 text-white/40'}">${t.status==='done'?'✅':'○'}</button><button onclick="deleteTask('${t.id}')" class="text-xs text-white/20 hover:text-red-400">🗑</button></div></div>`).join('');
-}
-
-async function toggleTask(id, currentStatus) {
-    const newStatus = currentStatus === 'done' ? 'todo' : 'done';
-    await sbQuery(sb.from('planner_tasks').update({status:newStatus}).eq('id',id),'task toggle');
-    loadTaskList();
-}
-
-async function deleteTask(id) {
-    await sbQuery(sb.from('planner_tasks').delete().eq('id',id),'task del');
-    loadTaskList();
-}
-
-// ═══════ INIT ═══════
-async function init() {
-    renderSidebar();
-    const {data} = await sb.auth.getSession();
-    if (data?.session?.user) {
-        user = data.session.user;
-        await loadAppData();
-        updateUI();
-        loadDashboard();
-        loadCoachHistory();
-    } else {
-        updateUI();
-        loadDashboard();
-    }
-}
 init();
 </script>
 </body>
