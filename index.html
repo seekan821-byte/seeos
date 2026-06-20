@@ -96,6 +96,7 @@
         <!-- ═════ TABS ═════ -->
         <div id="tab-dashboard" class="tab-content p-6"><h2 class="text-2xl font-bold mb-6">📊 Dashboard</h2><div id="dash-empty" class="glass p-12 text-center"><p class="text-5xl mb-4">🚀</p><p class="text-xl font-semibold text-white/80 mb-2">SeeOS'a Hoş Geldin!</p><p class="text-sm text-white/40">Çalışma seansı ekleyerek başla.</p></div><div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="kpi-grid"></div><div id="dash-extra" class="grid grid-cols-1 md:grid-cols-2 gap-6"><div id="study-recent" class="glass p-4"><h3 class="text-lg font-semibold mb-3">📝 Son Seanslar</h3><div id="study-list-inner"></div></div><div id="sleep-card" class="glass p-4"><h3 class="text-lg font-semibold mb-3">😴 Son Uyku</h3><div id="sleep-card-inner" class="text-sm text-white/50"></div></div></div></div>
 
+        <div id="dash-chart" class="glass p-4 col-span-full mt-6"><h3 class="text-lg font-semibold mb-3">📈 Haftalık Çalışma</h3><canvas id="weeklyChart" height="200"></canvas></div>
         <div id="tab-yks" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">🎯 YKS Komuta Merkezi</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><div class="glass p-6 text-center"><p class="text-sm text-white/40 mb-1">TYT'ye</p><p id="yks-tyt-countdown" class="text-3xl font-black text-apple-blue">--</p><p class="text-xs text-white/30 mt-2">20 Haziran 2026</p></div><div class="glass p-6 text-center"><p class="text-sm text-white/40 mb-1">AYT'ye</p><p id="yks-ayt-countdown" class="text-3xl font-black text-apple-green">--</p><p class="text-xs text-white/30 mt-2">21 Haziran 2026</p></div></div><div class="glass p-4 mb-6"><h3 class="text-lg font-semibold mb-3">📈 Net Takibi</h3><div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3"><input id="yks-subject" placeholder="Ders" class="input text-xs"><input id="yks-topic" placeholder="Konu" class="input text-xs"><input id="yks-correct" type="number" placeholder="Doğru" class="input text-xs" value="0"><input id="yks-wrong" type="number" placeholder="Yanlış" class="input text-xs" value="0"><select id="yks-type" class="input text-xs"><option>TYT</option><option>AYT</option></select></div><button onclick="addYKSProgress()" class="btn btn-primary btn-sm">➕ Ekle</button><div id="yks-progress-list" class="mt-4 space-y-1 text-sm"></div></div></div>
 
         <div id="tab-study" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">📚 Çalışma & Pomodoro</h2><div class="glass p-6 mb-6"><h3 class="text-lg font-semibold mb-4">⏱ Pomodoro</h3><div class="text-center mb-4"><span id="pomodoro-display" class="text-5xl font-mono font-bold">25:00</span><p id="pomodoro-status" class="text-sm text-white/50 mt-2">Hazır</p></div><div class="flex gap-2 justify-center flex-wrap mb-4"><button onclick="setPomodoro(25,5)" class="btn btn-sm">25/5</button><button onclick="setPomodoro(50,10)" class="btn btn-sm">50/10</button><button onclick="setPomodoro(90,20)" class="btn btn-sm">90/20</button></div><div class="flex gap-3 justify-center"><button id="pom-start" onclick="startPomodoro()" class="btn btn-primary btn-sm">▶ Başlat</button><button onclick="pausePomodoro()" class="btn btn-sm">⏸</button><button onclick="resetPomodoro()" class="btn btn-sm">↺</button></div></div><div class="glass p-6"><h3 class="text-lg font-semibold mb-4">📝 Çalışma Kaydı</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4"><input id="study-subject" placeholder="Ders / Konu" class="input"><input id="study-duration" type="number" placeholder="Süre (dk)" class="input" value="60"><input id="study-focus" type="number" placeholder="Odak (1-10)" class="input" value="7" min="1" max="10"></div><button onclick="addStudySession()" class="btn btn-primary btn-sm">💾 Kaydet</button><div id="study-session-list" class="mt-4 space-y-2"></div></div></div>
@@ -106,6 +107,7 @@
 
         <div id="tab-focus" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">⚡ Focus Blast</h2><div class="glass p-6 mb-6 max-w-md"><h3 class="text-lg font-semibold mb-4">🚀 Yeni Blast</h3><input id="focus-task" placeholder="Ne yapacaksın?" class="input mb-3"><input id="focus-duration" type="number" placeholder="Süre (dk)" class="input mb-4" value="25"><button onclick="startFocusBlast()" class="btn btn-primary">⚡ Blast Başlat</button><div id="focus-active" class="hidden mt-6 text-center"><p id="focus-timer" class="text-5xl font-mono font-bold text-apple-orange mb-2">25:00</p><p id="focus-task-name" class="text-white/60"></p><button onclick="completeFocusBlast()" class="btn btn-primary btn-sm mt-4">✅ Tamamla</button></div></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📋 Geçmiş Blast'lar</h3><div id="focus-list" class="space-y-2 text-sm"></div></div></div>
 
+        <div class="glass p-4 mb-6 hidden" id="yt-player-box"><div class="aspect-video rounded-lg overflow-hidden bg-black"><iframe id="yt-player" class="w-full h-full" allow="autoplay; encrypted-media" allowfullscreen></iframe></div></div>
         <div id="tab-youtube" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">▶ YouTube</h2><div class="glass p-4 mb-6 max-w-lg"><h3 class="text-lg font-semibold mb-3">🔗 Video Ekle</h3><div class="flex gap-2"><input id="yt-url" placeholder="YouTube URL'si" class="input flex-1"><button onclick="addYTVideo()" class="btn btn-primary btn-sm">➕ Ekle</button></div></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📺 Geçmiş</h3><div id="yt-list" class="space-y-2 text-sm"></div></div></div>
 
         <div id="tab-notes" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">📝 Notlar</h2><div class="glass p-4 mb-6 max-w-lg"><div class="flex gap-2 mb-3"><input id="note-title" placeholder="Başlık" class="input flex-1"><button onclick="addNote()" class="btn btn-primary btn-sm">➕ Yeni Not</button></div></div><div id="notes-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
@@ -116,12 +118,13 @@
     </main>
 </div>
 
+        <div class="glass p-4 mt-4"><h3 class="text-lg font-semibold mb-3">📉 Son 7 Gün Uyku Kalitesi</h3><canvas id="sleepChart" height="200"></canvas></div>
 <script>
 // ═══════════════════════════════════════════
 // SUPABASE CONFIG
 // ═══════════════════════════════════════════
 const SB_URL = 'https://mrpegrgjndfewwlknqfk.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycGVncmdqbmRmZXd3bGtucWZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDU2NjMsImV4cCI6MjA5NzQ4MTY2M30.YU78cwwNa9AwChusZ0grhHw__IVt3cKa9BEuATnEM7g';
+const SB_KEY = 'eyJhbG...EM7g';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 let user = null;
 let appData = {};
@@ -357,6 +360,7 @@ async function loadDashboard() {
         document.getElementById('sleep-card-inner').innerHTML = `🛏 ${sleepT.toLocaleDateString('tr-TR')}<br>⏱ ${hrs} saat — Kalite: ${lastSleep.quality || '?'}/10`;
     } else {
         document.getElementById('sleep-card-inner').textContent = 'Henüz uyku kaydı yok';
+    loadWeeklyChart();
     }
 }
 
@@ -388,6 +392,15 @@ async function loadYKS() {
     }).join('');
 }
 
+async function loadYKSAnalysis() {
+    if (!user) return;
+    const data = await sbQuery(sb.from('yks_progress').select('*').eq('user_id',user.id).order('date',{ascending:false}).limit(100),'yks analysis');
+    const el = document.getElementById('yks-analysis');
+    if (!el || !data?.length) { if(el) el.innerHTML='<p class="text-white/25 text-xs">Henüz net kaydı yok</p>'; return; }
+    const bySubject = {};
+    data.forEach(r=>{ const key=r.subject; if(!bySubject[key]) bySubject[key]={correct:0,wrong:0,total:0,count:0,exam:r.exam_type}; bySubject[key].correct+=r.correct||0; bySubject[key].wrong+=r.wrong||0; bySubject[key].total+=r.total||0; bySubject[key].count++; });
+    el.innerHTML = Object.entries(bySubject).map(([k,v])=>{const net=v.correct-(v.wrong/4);const pct=v.total>0?Math.round(v.correct/v.total*100):0;const color=net>=0?'#34C759':'#FF3B30';return `<div class="flex justify-between items-center px-3 py-2 rounded-lg" style="background:rgba(255,255,255,0.03)"><span class="text-white/70 text-xs">${v.exam} ${k}</span><span class="text-white/40 text-xs">${v.count} deneme</span><span class="font-semibold text-xs" style="color:${color}">${net.toFixed(1)} net (%${pct})</span></div>`;}).join('');
+}
 async function addYKSProgress() {
     if (!user) return alert('Önce giriş yapın!');
     const subject = document.getElementById('yks-subject').value.trim();
@@ -419,6 +432,18 @@ async function addStudySession() {
     loadDashboard();
 }
 
+async function loadWeeklyChart() {
+    if (!user) return;
+    const weekAgo = new Date(Date.now() - 7*86400000).toISOString();
+    const sessions = await sbQuery(sb.from('study_sessions').select('*').eq('user_id',user.id).gte('created_at',weekAgo).order('created_at'),'weekly');
+    if (!sessions?.length) return;
+    const days = {};
+    for (let d=6;d>=0;d--) { const k=new Date(Date.now()-d*86400000).toLocaleDateString('tr-TR',{weekday:'short'}); days[k]=0; }
+    sessions.forEach(s=>{ const k=new Date(s.created_at).toLocaleDateString('tr-TR',{weekday:'short'}); days[k]=(days[k]||0)+(s.duration_minutes||0); });
+    const ctx=document.getElementById('weeklyChart')?.getContext('2d');
+    if(!ctx) return;
+    new Chart(ctx,{type:'line',data:{labels:Object.keys(days),datasets:[{label:'dk',data:Object.values(days),borderColor:'#007AFF',backgroundColor:'rgba(0,122,255,0.1)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'#007AFF'}]},options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'rgba(255,255,255,0.3)'}},x:{ticks:{color:'rgba(255,255,255,0.3)'}}},responsive:true}});
+}
 async function loadStudyList() {
     if (!user) return;
     const sessions = await sbQuery(sb.from('study_sessions').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(20),'study list');
@@ -530,6 +555,17 @@ async function loadSleepList() {
 }
 
 // ═══════ FOCUS BLAST ═══════
+async function loadSleepChart() {
+    if (!user) return;
+    const weekAgo = new Date(Date.now() - 7*86400000).toISOString();
+    const records = await sbQuery(sb.from('sleep_records').select('*').eq('user_id',user.id).gte('created_at',weekAgo).order('created_at'),'sleep chart');
+    const ctx = document.getElementById('sleepChart')?.getContext('2d');
+    if (!ctx || !records?.length) return;
+    const labels = records.map(r=>new Date(r.sleep_time).toLocaleDateString('tr-TR',{weekday:'short'}));
+    const qualities = records.map(r=>r.quality||0);
+    const colors = qualities.map(q=>q>=7?'rgba(52,199,89,0.7)':q>=4?'rgba(255,149,0,0.7)':'rgba(255,59,48,0.7)');
+    new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Kalite',data:qualities,backgroundColor:colors,borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{max:10,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'rgba(255,255,255,0.3)'}},x:{ticks:{color:'rgba(255,255,255,0.3)'}}},responsive:true}});
+}
 async function startFocusBlast() {
     if (!user) return alert('Önce giriş yapın!');
     if (focusActive) return;
@@ -575,6 +611,11 @@ async function loadFocusList() {
 }
 
 // ═══════ YOUTUBE ═══════
+function playVideo(videoId) {
+    document.getElementById('yt-player').src = 'https://www.youtube.com/embed/'+videoId+'?autoplay=1';
+    document.getElementById('yt-player-box').classList.remove('hidden');
+    document.getElementById('yt-player-box').scrollIntoView({behavior:'smooth'});
+}
 async function addYTVideo() {
     if (!user) return alert('Önce giriş yapın!');
     const url = document.getElementById('yt-url').value.trim();
@@ -595,7 +636,7 @@ async function loadYTList() {
     const el = document.getElementById('yt-list');
     el.innerHTML = data?.length ? data.map(r=>{
         const thumb = `https://i.ytimg.com/vi/${r.video_id}/default.jpg`;
-        return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><img src="${thumb}" class="w-16 h-9 rounded object-cover"><span class="flex-1 text-white/70 truncate">${r.title||r.video_id}</span><a href="https://youtube.com/watch?v=${r.video_id}" target="_blank" class="text-apple-blue text-xs">▶</a></div>`;
+        return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><img src="${thumb}" class="w-16 h-9 rounded object-cover"><span class="flex-1 text-white/70 truncate">${r.title||r.video_id}</span><a href="https://youtube.com/watch?v=${r.video_id}" onclick="playVideo(\'${r.video_id}\')" style="cursor:pointer" class="text-apple-blue text-xs">▶</a></div>`;
     }).join('') : '<p class="text-white/25 text-xs">Henüz video yok</p>';
 }
 
