@@ -108,13 +108,11 @@
         <div id="tab-focus" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">⚡ Focus Blast</h2><div class="glass p-6 mb-6 max-w-md"><h3 class="text-lg font-semibold mb-4">🚀 Yeni Blast</h3><input id="focus-task" placeholder="Ne yapacaksın?" class="input mb-3"><input id="focus-duration" type="number" placeholder="Süre (dk)" class="input mb-4" value="25"><button onclick="startFocusBlast()" class="btn btn-primary">⚡ Blast Başlat</button><div id="focus-active" class="hidden mt-6 text-center"><p id="focus-timer" class="text-5xl font-mono font-bold text-apple-orange mb-2">25:00</p><p id="focus-task-name" class="text-white/60"></p><button onclick="completeFocusBlast()" class="btn btn-primary btn-sm mt-4">✅ Tamamla</button></div></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📋 Geçmiş Blast'lar</h3><div id="focus-list" class="space-y-2 text-sm"></div></div></div>
 
         <div class="glass p-4 mb-6 hidden" id="yt-player-box"><div class="aspect-video rounded-lg overflow-hidden bg-black"><iframe id="yt-player" class="w-full h-full" allow="autoplay; encrypted-media" allowfullscreen></iframe></div></div>
-        <div id="tab-youtube" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">▶ YouTube</h2><div class="glass p-4 mb-6 max-w-lg"><h3 class="text-lg font-semibold mb-3">🔗 Video Ekle</h3><div class="flex gap-2"><input id="yt-url" placeholder="YouTube URL'si" class="input flex-1"><button onclick="addYTVideo()" class="btn btn-primary btn-sm">➕ Ekle</button></div></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📺 Geçmiş</h3><div id="yt-list" class="space-y-2 text-sm"></div></div></div>
+        <div class="glass p-4 mb-6 max-w-lg"><h3 class="text-lg font-semibold mb-3">🔍 Video Ara</h3><div class="flex gap-2"><input id="yt-search" placeholder="Arama terimi..." class="input flex-1" onkeypress="if(event.key==='Enter')searchYT()"><button onclick="searchYT()" class="btn btn-primary btn-sm">🔍 Ara</button></div></div>
 
         <div id="tab-notes" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">📝 Notlar</h2><div class="glass p-4 mb-6 max-w-lg"><div class="flex gap-2 mb-3"><input id="note-title" placeholder="Başlık" class="input flex-1"><button onclick="addNote()" class="btn btn-primary btn-sm">➕ Yeni Not</button></div></div><div id="notes-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
 
         <div id="tab-planner" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">📋 Planlayıcı</h2><div class="glass p-4 mb-6 max-w-lg"><h3 class="text-lg font-semibold mb-3">➕ Yeni Görev</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3"><input id="task-title" placeholder="Görev" class="input"><input id="task-due" type="date" class="input"></div><div class="flex gap-2 mb-3"><select id="task-priority" class="input"><option value="medium">🟡 Orta</option><option value="low">🟢 Düşük</option><option value="high">🟠 Yüksek</option><option value="urgent">🔴 Acil</option></select><button onclick="addTask()" class="btn btn-primary btn-sm flex-1">➕ Ekle</button></div></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📋 Görevler</h3><div id="task-list" class="space-y-2"></div></div></div>
-
-        <div id="tab-settings" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">⚙️ Ayarlar</h2><div class="glass p-6 max-w-md"><label class="block text-sm text-white/60 mb-1">Adınız</label><input id="setting-username" class="input mb-4" onchange="saveSetting('username',this.value)"><label class="block text-sm text-white/60 mb-1">AI Koç Kişiliği</label><select id="setting-persona" class="input mb-4" onchange="saveSetting('persona',this.value)"><option>Motivational</option><option>Savage</option><option>Analytical</option><option>Buddy</option></select><label class="block text-sm text-white/60 mb-1">DeepSeek API Key</label><input id="setting-apikey" type="password" class="input mb-4" placeholder="sk-..." onchange="saveSetting('deepseek_key',this.value)"><div class="flex items-center gap-2 mt-4"><span class="w-2 h-2 rounded-full bg-green-400"></span><span class="text-xs text-white/40">Supabase Cloud — bağlı</span></div></div></div>
     </main>
 </div>
 
@@ -300,20 +298,37 @@ async function loadAvatar() {
 }
 
 async function handleAvatarUpload(e) {
-    const file = e.target.files[0]; if(!file||!user) return;
+    const file = e.target.files[0];
+    if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) { alert('Dosya çok büyük (max 5MB)!'); return; }
+    if (!file.type.startsWith('image/')) { alert('Sadece resim dosyası!'); return; }
     const reader = new FileReader();
+    reader.onerror = function() { alert('Dosya okunamadı!'); };
     reader.onload = async function(ev) {
-        const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
-        const tmp = new Image();
-        tmp.onload = async function() {
-            const max=200, r=Math.min(max/tmp.width,max/tmp.height,1);
-            canvas.width=Math.round(tmp.width*r); canvas.height=Math.round(tmp.height*r);
-            ctx.drawImage(tmp,0,0,canvas.width,canvas.height);
-            const b64 = canvas.toDataURL('image/jpeg',0.85);
-            await sbQuery(sb.from('profiles').upsert({user_id:user.id,avatar_url:b64},{onConflict:'user_id'}),'avatar save');
-            loadAvatar();
-        };
-        tmp.src=ev.target.result;
+        try {
+            const img = new Image();
+            img.onerror = function() { alert('Resim bozuk veya geçersiz!'); };
+            img.onload = async function() {
+                const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+                const max = 300, r = Math.min(max / img.width, max / img.height, 1);
+                canvas.width = Math.round(img.width * r);
+                canvas.height = Math.round(img.height * r);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const b64 = canvas.toDataURL('image/jpeg', 0.8);
+                const result = await sbQuery(sb.from('profiles').upsert({user_id: user.id, avatar_url: b64}, {onConflict: 'user_id'}), 'avatar save');
+                if (result !== null) {
+                    document.getElementById('avatar-img').src = b64;
+                    document.getElementById('avatar-img').classList.remove('hidden');
+                    document.getElementById('avatar-placeholder').classList.add('hidden');
+                    localStorage.setItem('seeos_avatar', b64);
+                } else {
+                    alert('Profil fotoğrafı kaydedilemedi. Lütfen tekrar deneyin.');
+                }
+            };
+            img.src = ev.target.result;
+        } catch(err) {
+            alert('Yükleme hatası: ' + err.message);
+        }
     };
     reader.readAsDataURL(file);
 }
@@ -616,18 +631,10 @@ function playVideo(videoId) {
     document.getElementById('yt-player-box').classList.remove('hidden');
     document.getElementById('yt-player-box').scrollIntoView({behavior:'smooth'});
 }
-async function addYTVideo() {
-    if (!user) return alert('Önce giriş yapın!');
-    const url = document.getElementById('yt-url').value.trim();
-    if (!url) return alert('URL girin!');
-    
-    let videoId = '';
-    try { const u = new URL(url); videoId = u.searchParams.get('v') || u.pathname.split('/').pop(); } catch(e) {}
-    if (!videoId) return alert('Geçersiz YouTube URL!');
-    
-    await sbQuery(sb.from('youtube_history').insert({user_id:user.id,video_id:videoId,title:url}),'yt add');
-    document.getElementById('yt-url').value = '';
-    loadYTList();
+function searchYT() {
+    const query = document.getElementById('yt-search').value.trim();
+    if (!query) return alert('Arama terimi girin!');
+    window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(query), '_blank');
 }
 
 async function loadYTList() {
