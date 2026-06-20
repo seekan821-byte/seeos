@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeeOS — Cloud v3.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>tailwind.config={darkMode:'class',theme:{extend:{colors:{apple:{blue:'#007AFF',green:'#34C759',orange:'#FF9500',red:'#FF3B30',purple:'#AF52DE',pink:'#FF2D55',teal:'#5AC8FA'}}}}}</script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,900&display=swap');
+        *{font-family:'Inter',sans-serif} body{background:#000;color:#f5f5f7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+        .glass{background:rgba(255,255,255,0.06);backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,0.08);border-radius:20px}
+        .card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.06);border-radius:18px;transition:all .3s}
+        .card:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.12)}
+        .btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 20px;font-weight:600;font-size:14px;transition:all .2s;cursor:pointer;color:#f5f5f7}
+        .btn:hover{background:rgba(255,255,255,0.16)} .btn-primary{background:#007AFF;border-color:#007AFF}.btn-primary:hover{background:#0066d6}
+        .btn-danger{background:rgba(255,59,48,0.2);border-color:rgba(255,59,48,0.3);color:#FF3B30}.btn-danger:hover{background:rgba(255,59,48,0.35)}
+        .input{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 16px;color:#f5f5f7;font-size:14px;outline:none;width:100%}.input:focus{border-color:#007AFF}
+        .tab-btn.active{background:rgba(255,255,255,0.1)!important;color:#fff!important}
+        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
+        @media(max-width:768px){.sidebar{position:fixed;left:-280px;top:0;z-index:50;height:100vh;transition:left .3s;width:260px}.sidebar.open{left:0}.mobile-menu-btn{display:flex!important}}
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ═══════════ AUTH OVERLAY ═══════════ -->
+<div id="auth-overlay" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(8px)">
+    <div class="glass p-8 w-full max-w-sm mx-4">
+        <h2 class="text-xl font-bold mb-6 text-center text-white">SeeOS</h2>
+        <div class="flex gap-2 mb-6">
+            <button id="auth-tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 rounded-lg text-sm font-medium transition" style="background:rgba(255,255,255,0.12)">Giriş Yap</button>
+            <button id="auth-tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 rounded-lg text-sm font-medium text-white/50 transition">Kayıt Ol</button>
+        </div>
+        <form id="auth-form-login" onsubmit="handleLogin(event)">
+            <p id="login-error" class="text-[#FF3B30] text-xs mb-3 hidden"></p>
+            <input id="login-email" type="email" placeholder="Email" required class="input mb-3">
+            <input id="login-password" type="password" placeholder="Şifre" required class="input mb-4">
+            <button type="submit" class="btn btn-primary w-full">🔐 Giriş Yap</button>
+        </form>
+        <form id="auth-form-register" onsubmit="handleRegister(event)" class="hidden">
+            <p id="reg-error" class="text-[#FF3B30] text-xs mb-3 hidden"></p>
+            <input id="reg-name" placeholder="Adınız" required class="input mb-3">
+            <input id="reg-email" type="email" placeholder="Email" required class="input mb-3">
+            <input id="reg-password" type="password" placeholder="Şifre (min 6 karakter)" required class="input mb-4">
+            <button type="submit" class="btn btn-primary w-full">✨ Hesap Oluştur</button>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════ LAYOUT ═══════════ -->
+<div class="flex min-h-screen">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="sidebar w-60 flex-shrink-0 border-r border-white/5 p-4 flex flex-col gap-2" style="background:rgba(0,0,0,0.4)">
+        <div class="flex items-center gap-2 px-3 py-2 mb-4">
+            <span class="text-lg font-bold tracking-tight text-white">SeeOS</span>
+            <span class="text-[10px] text-white/30 bg-white/5 px-1.5 py-0.5 rounded">v3</span>
+        </div>
+        <nav id="sidebar-nav" class="flex flex-col gap-1 flex-1 overflow-y-auto"></nav>
+        <div class="pt-4 border-t border-white/5">
+            <button onclick="showAuthModal()" id="header-login-btn" class="w-full text-left px-3 py-2 text-xs text-white/40 hover:text-white/80 rounded-lg transition">🔐 Giriş</button>
+            <div id="header-user-info" class="hidden">
+                <span id="header-user-name" class="text-xs text-white/60 px-3 block"></span>
+                <button onclick="handleLogout()" class="w-full text-left px-3 py-2 text-xs text-white/30 hover:text-red-400 rounded-lg transition">Çıkış</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MOBILE BACKDROP -->
+    <div id="mobile-backdrop" class="fixed inset-0 z-40 hidden" style="background:rgba(0,0,0,0.5)" onclick="closeMobileMenu()"></div>
+
+    <!-- MAIN -->
+    <main class="flex-1 flex flex-col min-h-screen">
+        <header class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleMobileMenu()" class="mobile-menu-btn hidden w-8 h-8 items-center justify-center rounded-lg bg-white/5 lg:hidden">☰</button>
+                <span id="live-clock" class="text-white/60 text-sm">00:00</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="profile-area" class="relative group cursor-pointer w-9 h-9 rounded-full border-2 border-white/10 flex items-center justify-center overflow-hidden bg-white/5 hover:border-white/30 transition" onclick="document.getElementById('avatar-input').click()" title="Profil fotoğrafı yükle">
+                    <svg id="avatar-placeholder" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <img id="avatar-img" src="" class="w-full h-full object-cover hidden" />
+                </div>
+                <input type="file" id="avatar-input" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="handleAvatarUpload(event)">
+            </div>
+        </header>
+
+        <div id="tab-dashboard" class="tab-content p-6">
+            <h2 class="text-2xl font-bold mb-6 text-white">Dashboard</h2>
+            <div id="dash-empty" class="glass p-12 text-center hidden"><p class="text-5xl mb-4">🚀</p><p class="text-xl font-semibold text-white/80 mb-2">SeeOS'a Hoş Geldin!</p><p class="text-sm text-white/40">Çalışma seansı ekleyerek başla.</p></div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="kpi-grid"></div>
+            <div id="study-list" class="mt-4"></div>
+        </div>
+
+        <div id="tab-study" class="tab-content p-6 hidden">
+            <h2 class="text-2xl font-bold mb-6 text-white">Çalışma & Pomodoro</h2>
+            <div class="glass p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">⏱ Pomodoro</h3>
+                <div class="text-center mb-4">
+                    <span id="pomodoro-display" class="text-5xl font-mono font-bold text-white">25:00</span>
+                    <p id="pomodoro-status" class="text-sm text-white/50 mt-2">Hazır</p>
+                </div>
+                <div class="flex gap-2 justify-center flex-wrap mb-4">
+                    <button onclick="setPomodoro(25,5)" class="btn text-xs">25/5</button>
+                    <button onclick="setPomodoro(50,10)" class="btn text-xs">50/10</button>
+                    <button onclick="setPomodoro(90,20)" class="btn text-xs">90/20</button>
+                </div>
+                <div class="flex gap-3 justify-center">
+                    <button id="pomodoro-start" onclick="startPomodoro()" class="btn btn-primary">▶ Başlat</button>
+                    <button onclick="pausePomodoro()" class="btn">⏸</button>
+                    <button onclick="resetPomodoro()" class="btn">↺</button>
+                </div>
+            </div>
+            <div class="glass p-6">
+                <h3 class="text-lg font-semibold mb-4">📝 Çalışma Kaydı</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                    <input id="study-subject" placeholder="Ders / Konu" class="input">
+                    <input id="study-duration" type="number" placeholder="Süre (dk)" class="input" value="60">
+                    <input id="study-focus" type="number" placeholder="Odak (1-10)" class="input" value="7" min="1" max="10">
+                </div>
+                <button onclick="addStudySession()" class="btn btn-primary">💾 Kaydet</button>
+                <div id="study-session-list" class="mt-4 space-y-2"></div>
+            </div>
+        </div>
+
+        <div id="tab-settings" class="tab-content p-6 hidden">
+            <h2 class="text-2xl font-bold mb-6 text-white">Ayarlar</h2>
+            <div class="glass p-6 max-w-md">
+                <label class="block text-sm text-white/60 mb-1">Adınız</label>
+                <input id="setting-username" class="input mb-4" onchange="saveSetting('username',this.value)">
+                <label class="block text-sm text-white/60 mb-1">AI Koç Kişiliği</label>
+                <select id="setting-persona" class="input mb-4" onchange="saveSetting('persona',this.value)">
+                    <option>Motivational</option><option>Savage</option><option>Analytical</option><option>Buddy</option>
+                </select>
+                <div class="flex items-center gap-2 mt-4">
+                    <span id="status-dot" class="w-2 h-2 rounded-full bg-green-400"></span>
+                    <span class="text-xs text-white/40">Supabase Cloud — bağlı</span>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// SUPABASE CONFIG
+// ═══════════════════════════════════════════
+const SB_URL = 'https://mrpegrgjndfewwlknqfk.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycGVncmdqbmRmZXd3bGtucWZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDU2NjMsImV4cCI6MjA5NzQ4MTY2M30.YU78cwwNa9AwChusZ0grhHw__IVt3cKa9BEuATnEM7g';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+let user = null;
+let appData = {}; // cached settings JSONB
+
+// ═══════ SAFE SUPABASE WRAPPER ═══════
+async function sbQuery(promise, label) {
+    try { const {data,error}=await promise; if(error){console.warn('SB['+label+']:',error.message);return null;} return data; }
+    catch(e){ console.warn('SB['+label+']:',e.message); return null; }
+}
+
+// ═══════ AUTH ═══════
+function switchAuthTab(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('auth-tab-login').style.background = isLogin ? 'rgba(255,255,255,0.12)' : '';
+    document.getElementById('auth-tab-register').style.background = !isLogin ? 'rgba(255,255,255,0.12)' : '';
+    document.getElementById('auth-form-login').classList.toggle('hidden', !isLogin);
+    document.getElementById('auth-form-register').classList.toggle('hidden', isLogin);
+    document.getElementById('login-error').classList.add('hidden');
+    document.getElementById('reg-error').classList.add('hidden');
+}
+function showAuthModal(){ document.getElementById('auth-overlay').classList.remove('hidden'); switchAuthTab('login'); }
+function hideAuthModal(){ document.getElementById('auth-overlay').classList.add('hidden'); }
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('login-error'); errEl.classList.add('hidden');
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const {data,error} = await sb.auth.signInWithPassword({email,password});
+    if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); return; }
+    user = data.user;
+    await loadAppData();
+    updateUI();
+    hideAuthModal();
+    loadDashboard();
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('reg-error'); errEl.classList.add('hidden');
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const {data,error} = await sb.auth.signUp({email,password,options:{data:{name}}});
+    if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); return; }
+    if (data.user) {
+        user = data.user;
+        await sbQuery(sb.from('profiles').upsert({user_id:user.id,username:name},{onConflict:'user_id'}),'profile');
+        await sbQuery(sb.from('settings').upsert({user_id:user.id,theme:'dark',goal_settings:{}}),'settings init');
+        await loadAppData();
+        updateUI();
+        hideAuthModal();
+        loadDashboard();
+    }
+}
+
+async function handleLogout() {
+    await sb.auth.signOut();
+    user = null; appData = {};
+    updateUI();
+    loadDashboard();
+}
+
+function updateUI() {
+    const loggedIn = !!user;
+    document.getElementById('header-login-btn').classList.toggle('hidden', loggedIn);
+    document.getElementById('header-user-info').classList.toggle('hidden', !loggedIn);
+    if (loggedIn) document.getElementById('header-user-name').textContent = user.user_metadata?.name || user.email;
+    loadAvatar();
+}
+
+// ═══════ APP DATA (settings.goal_settings as JSONB cache) ═══════
+async function loadAppData() {
+    if (!user) { appData = {}; return; }
+    const data = await sbQuery(sb.from('settings').select('goal_settings,theme').eq('user_id',user.id).limit(1),'load settings');
+    appData = data?.[0]?.goal_settings || {};
+    if (!appData || Object.keys(appData).length === 0) {
+        appData = { persona:'Motivational', sidebar_order:['dashboard','study','settings'] };
+    }
+    // Populate settings fields
+    if (document.getElementById('setting-persona')) document.getElementById('setting-persona').value = appData.persona || 'Motivational';
+    if (document.getElementById('setting-username')) document.getElementById('setting-username').value = appData.username || '';
+    renderSidebar();
+}
+
+async function saveAppData() {
+    if (!user) return;
+    await sbQuery(sb.from('settings').upsert({user_id:user.id,theme:'dark',goal_settings:appData},{onConflict:'user_id'}),'save settings');
+}
+
+function saveSetting(key, value) {
+    appData[key] = value;
+    saveAppData();
+}
+
+// ═══════ SIDEBAR ═══════
+const TAB_ICONS = {
+    dashboard: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    study: '<path d="M12 14l9-5-9-5-9 5z"/><path d="M12 14l6.7-3.7"/><line x1="12" y1="14" x2="12" y2="21"/>',
+    settings: '<circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
+};
+const TAB_LABELS = { dashboard:'Dashboard', study:'Çalışma', settings:'Ayarlar' };
+const DEFAULT_ORDER = ['dashboard','study','settings'];
+
+function renderSidebar() {
+    const order = appData.sidebar_order || DEFAULT_ORDER;
+    const nav = document.getElementById('sidebar-nav');
+    nav.innerHTML = order.map(name => {
+        const icon = TAB_ICONS[name] || '';
+        return `<button onclick="switchTab('${name}')" class="tab-btn text-left px-3 py-2.5 flex items-center gap-3 rounded-xl text-sm text-white/50 hover:bg-white/5 transition w-full" id="tab-btn-${name}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icon}</svg><span>${TAB_LABELS[name]||name}</span></button>`;
+    }).join('');
+}
+
+function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const tab = document.getElementById('tab-'+name);
+    const btn = document.getElementById('tab-btn-'+name);
+    if (tab) tab.classList.remove('hidden');
+    if (btn) btn.classList.add('active');
+    if (name === 'dashboard') loadDashboard();
+    if (name === 'study') loadStudyList();
+    closeMobileMenu();
+}
+
+// ═══════ MOBILE ═══════
+function toggleMobileMenu(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('mobile-backdrop').classList.toggle('hidden'); }
+function closeMobileMenu(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('mobile-backdrop').classList.add('hidden'); }
+
+// ═══════ CLOCK ═══════
+function updateClock() {
+    const d = new Date();
+    document.getElementById('live-clock').textContent = 
+        String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' | '+
+        d.getDate()+' '+['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][d.getMonth()]+' '+
+        d.getFullYear();
+}
+setInterval(updateClock, 30000); updateClock();
+
+// ═══════ AVATAR ═══════
+async function loadAvatar() {
+    const img = document.getElementById('avatar-img');
+    const ph = document.getElementById('avatar-placeholder');
+    if (!img||!ph) return;
+    if (!user) { img.classList.add('hidden'); ph.classList.remove('hidden'); return; }
+    const data = await sbQuery(sb.from('profiles').select('avatar_url').eq('user_id',user.id).limit(1),'avatar');
+    if (data?.[0]?.avatar_url) { img.src=data[0].avatar_url; img.classList.remove('hidden'); ph.classList.add('hidden'); }
+    else { img.classList.add('hidden'); ph.classList.remove('hidden'); }
+}
+
+async function handleAvatarUpload(e) {
+    const file = e.target.files[0]; if(!file||!user) return;
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+        const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+        const tmp = new Image();
+        tmp.onload = async function() {
+            const max=200, r=Math.min(max/tmp.width,max/tmp.height,1);
+            canvas.width=Math.round(tmp.width*r); canvas.height=Math.round(tmp.height*r);
+            ctx.drawImage(tmp,0,0,canvas.width,canvas.height);
+            const b64 = canvas.toDataURL('image/jpeg',0.85);
+            await sbQuery(sb.from('profiles').upsert({user_id:user.id,avatar_url:b64},{onConflict:'user_id'}),'avatar save');
+            loadAvatar();
+        };
+        tmp.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+// ═══════ DASHBOARD ═══════
+async function loadDashboard() {
+    if (!user) {
+        document.getElementById('dash-empty').classList.remove('hidden');
+        document.getElementById('kpi-grid').innerHTML = '';
+        document.getElementById('study-list').innerHTML = '';
+        return;
+    }
+    document.getElementById('dash-empty').classList.add('hidden');
+    
+    // Fetch study sessions for KPI
+    const sessions = await sbQuery(sb.from('study_sessions').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(100),'dashboard');
+    
+    const total = sessions?.length || 0;
+    const totalMin = sessions?.reduce((s,r)=>s+(r.duration_minutes||0),0) || 0;
+    const today = new Date().toISOString().split('T')[0];
+    const todaySessions = sessions?.filter(s=>s.created_at?.startsWith(today)) || [];
+    const todayMin = todaySessions.reduce((s,r)=>s+(r.duration_minutes||0),0);
+    const avgFocus = sessions?.length ? Math.round(sessions.reduce((s,r)=>s+(r.focus_score||7),0)/sessions.length) : 0;
+    
+    document.getElementById('kpi-grid').innerHTML = [
+        {label:'Toplam Seans',val:total,color:'#007AFF'},
+        {label:'Toplam Süre',val:Math.round(totalMin/60)+'s',color:'#34C759'},
+        {label:'Bugün',val:todayMin+'dk',color:'#FF9500'},
+        {label:'Ort. Odak',val:avgFocus+'/10',color:'#AF52DE'}
+    ].map(k=>`<div class="glass p-4"><p class="text-xs text-white/40 mb-1">${k.label}</p><p class="text-2xl font-bold" style="color:${k.color}">${k.val}</p></div>`).join('');
+    
+    // Recent sessions
+    const recent = sessions?.slice(0,10) || [];
+    document.getElementById('study-list').innerHTML = recent.length 
+        ? '<h3 class="text-lg font-semibold mb-3 text-white/80">Son Seanslar</h3>'+recent.map(s=>`<div class="flex justify-between items-center px-4 py-2 rounded-xl text-sm" style="background:rgba(255,255,255,0.03)"><span class="text-white/80">${s.subject_name}</span><span class="text-white/50">${s.duration_minutes}dk</span><span class="text-white/25 text-xs">${new Date(s.created_at).toLocaleDateString('tr-TR')}</span></div>`).join('')
+        : '<p class="text-white/25 text-sm py-4">Henüz çalışma kaydı yok.</p>';
+}
+
+// ═══════ STUDY SESSIONS ═══════
+async function addStudySession() {
+    if (!user) return alert('Önce giriş yapın!');
+    const subject = document.getElementById('study-subject').value.trim();
+    const duration = parseInt(document.getElementById('study-duration').value);
+    const focus = parseInt(document.getElementById('study-focus').value) || 7;
+    if (!subject||!duration) return alert('Tüm alanları doldurun!');
+    await sbQuery(sb.from('study_sessions').insert({user_id:user.id,subject_name:subject,duration_minutes:duration}),'add study');
+    document.getElementById('study-subject').value='';
+    document.getElementById('study-duration').value='60';
+    loadStudyList();
+    loadDashboard();
+}
+
+async function loadStudyList() {
+    if (!user) return;
+    const sessions = await sbQuery(sb.from('study_sessions').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(20),'study list');
+    const el = document.getElementById('study-session-list');
+    el.innerHTML = sessions?.length 
+        ? sessions.map(s=>`<div class="flex justify-between items-center px-4 py-2 rounded-xl text-sm" style="background:rgba(255,255,255,0.03)"><span class="text-white/80">${s.subject_name}</span><span class="text-white/50">${s.duration_minutes}dk</span><span class="text-white/40 text-xs">Odak:${s.focus_score||7}/10</span><span class="text-white/25 text-xs">${new Date(s.created_at).toLocaleDateString('tr-TR')}</span></div>`).join('')
+        : '<p class="text-white/25 text-sm py-2">Henüz kayıt yok.</p>';
+}
+
+// ═══════ POMODORO ═══════
+let pomWork=25, pomBreak=5, pomSeconds=25*60, pomInterval=null, pomRunning=false;
+
+function setPomodoro(w,b) { pomWork=w; pomBreak=b; pomSeconds=w*60; updatePomodoroDisplay(); document.getElementById('pomodoro-status').textContent='Hazır ('+w+'dk)'; }
+function updatePomodoroDisplay() { const m=Math.floor(pomSeconds/60),s=pomSeconds%60; document.getElementById('pomodoro-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+function startPomodoro() { if(pomRunning)return; pomRunning=true; document.getElementById('pomodoro-start').textContent='▶'; pomInterval=setInterval(()=>{pomSeconds--;updatePomodoroDisplay();if(pomSeconds<=0){clearInterval(pomInterval);pomRunning=false;document.getElementById('pomodoro-status').textContent='Tamamlandı!';new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4AA==').play().catch(()=>{});}},1000); }
+function pausePomodoro() { clearInterval(pomInterval); pomRunning=false; document.getElementById('pomodoro-start').textContent='▶'; }
+function resetPomodoro() { clearInterval(pomInterval); pomRunning=false; pomSeconds=pomWork*60; updatePomodoroDisplay(); document.getElementById('pomodoro-status').textContent='Hazır ('+pomWork+'dk)'; }
+updatePomodoroDisplay();
+
+// ═══════ INIT ═══════
+async function init() {
+    renderSidebar(); // Always show sidebar
+    const {data} = await sb.auth.getSession();
+    if (data?.session?.user) {
+        user = data.session.user;
+        await loadAppData();
+        updateUI();
+        loadDashboard();
+    } else {
+        updateUI();
+        loadDashboard();
+    }
+}
+init();
+</script>
+</body>
+</html>
