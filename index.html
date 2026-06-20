@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SeeOS — Cloud v3.0</title>
+    <title>SeeOS — Cloud v4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -17,16 +17,25 @@
         .btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 20px;font-weight:600;font-size:14px;transition:all .2s;cursor:pointer;color:#f5f5f7}
         .btn:hover{background:rgba(255,255,255,0.16)} .btn-primary{background:#007AFF;border-color:#007AFF}.btn-primary:hover{background:#0066d6}
         .btn-danger{background:rgba(255,59,48,0.2);border-color:rgba(255,59,48,0.3);color:#FF3B30}.btn-danger:hover{background:rgba(255,59,48,0.35)}
+        .btn-sm{padding:6px 14px;font-size:12px;border-radius:8px}
         .input{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 16px;color:#f5f5f7;font-size:14px;outline:none;width:100%}.input:focus{border-color:#007AFF}
         .tab-btn.active{background:rgba(255,255,255,0.1)!important;color:#fff!important}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
-        @media(max-width:768px){.sidebar{position:fixed;left:-280px;top:0;z-index:50;height:100vh;transition:left .3s;width:260px}.sidebar.open{left:0}.mobile-menu-btn{display:flex!important}}
+        .countdown-digit{font-size:2rem;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+        .chat-msg{padding:10px 14px;border-radius:14px;max-width:85%;font-size:13px;line-height:1.5}
+        .chat-user{background:#007AFF;color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+        .chat-bot{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.06);border-bottom-left-radius:4px}
+        .pulse{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+        .task-done{text-decoration:line-through;opacity:.4}
+        .modal-overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center}
+        .modal-box{background:rgba(20,20,20,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:24px;max-width:90vw;max-height:80vh;overflow-y:auto}
+        @media(max-width:768px){.sidebar{position:fixed;left:-280px;top:0;z-index:50;height:100vh;transition:left .3s;width:260px}.sidebar.open{left:0}.mobile-menu-btn{display:flex!important}.countdown-digit{font-size:1.5rem}}
     </style>
 </head>
 <body class="min-h-screen">
 
 <!-- ═══════════ AUTH OVERLAY ═══════════ -->
-<div id="auth-overlay" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(8px)">
+<div id="auth-overlay" class="fixed inset-0 z-50 items-center justify-center hidden" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:none">
     <div class="glass p-8 w-full max-w-sm mx-4">
         <h2 class="text-xl font-bold mb-6 text-center text-white">SeeOS</h2>
         <div class="flex gap-2 mb-6">
@@ -55,7 +64,7 @@
     <aside id="sidebar" class="sidebar w-60 flex-shrink-0 border-r border-white/5 p-4 flex flex-col gap-2" style="background:rgba(0,0,0,0.4)">
         <div class="flex items-center gap-2 px-3 py-2 mb-4">
             <span class="text-lg font-bold tracking-tight text-white">SeeOS</span>
-            <span class="text-[10px] text-white/30 bg-white/5 px-1.5 py-0.5 rounded">v3</span>
+            <span class="text-[10px] text-white/30 bg-white/5 px-1.5 py-0.5 rounded">v4</span>
         </div>
         <nav id="sidebar-nav" class="flex flex-col gap-1 flex-1 overflow-y-auto"></nav>
         <div class="pt-4 border-t border-white/5">
@@ -67,10 +76,8 @@
         </div>
     </aside>
 
-    <!-- MOBILE BACKDROP -->
     <div id="mobile-backdrop" class="fixed inset-0 z-40 hidden" style="background:rgba(0,0,0,0.5)" onclick="closeMobileMenu()"></div>
 
-    <!-- MAIN -->
     <main class="flex-1 flex flex-col min-h-screen">
         <header class="flex items-center justify-between px-6 py-4 border-b border-white/5">
             <div class="flex items-center gap-3">
@@ -86,59 +93,26 @@
             </div>
         </header>
 
-        <div id="tab-dashboard" class="tab-content p-6">
-            <h2 class="text-2xl font-bold mb-6 text-white">Dashboard</h2>
-            <div id="dash-empty" class="glass p-12 text-center hidden"><p class="text-5xl mb-4">🚀</p><p class="text-xl font-semibold text-white/80 mb-2">SeeOS'a Hoş Geldin!</p><p class="text-sm text-white/40">Çalışma seansı ekleyerek başla.</p></div>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="kpi-grid"></div>
-            <div id="study-list" class="mt-4"></div>
-        </div>
+        <!-- ═════ TABS ═════ -->
+        <div id="tab-dashboard" class="tab-content p-6"><h2 class="text-2xl font-bold mb-6">📊 Dashboard</h2><div id="dash-empty" class="glass p-12 text-center"><p class="text-5xl mb-4">🚀</p><p class="text-xl font-semibold text-white/80 mb-2">SeeOS'a Hoş Geldin!</p><p class="text-sm text-white/40">Çalışma seansı ekleyerek başla.</p></div><div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="kpi-grid"></div><div id="dash-extra" class="grid grid-cols-1 md:grid-cols-2 gap-6"><div id="study-recent" class="glass p-4"><h3 class="text-lg font-semibold mb-3">📝 Son Seanslar</h3><div id="study-list-inner"></div></div><div id="sleep-card" class="glass p-4"><h3 class="text-lg font-semibold mb-3">😴 Son Uyku</h3><div id="sleep-card-inner" class="text-sm text-white/50"></div></div></div></div>
 
-        <div id="tab-study" class="tab-content p-6 hidden">
-            <h2 class="text-2xl font-bold mb-6 text-white">Çalışma & Pomodoro</h2>
-            <div class="glass p-6 mb-6">
-                <h3 class="text-lg font-semibold mb-4">⏱ Pomodoro</h3>
-                <div class="text-center mb-4">
-                    <span id="pomodoro-display" class="text-5xl font-mono font-bold text-white">25:00</span>
-                    <p id="pomodoro-status" class="text-sm text-white/50 mt-2">Hazır</p>
-                </div>
-                <div class="flex gap-2 justify-center flex-wrap mb-4">
-                    <button onclick="setPomodoro(25,5)" class="btn text-xs">25/5</button>
-                    <button onclick="setPomodoro(50,10)" class="btn text-xs">50/10</button>
-                    <button onclick="setPomodoro(90,20)" class="btn text-xs">90/20</button>
-                </div>
-                <div class="flex gap-3 justify-center">
-                    <button id="pomodoro-start" onclick="startPomodoro()" class="btn btn-primary">▶ Başlat</button>
-                    <button onclick="pausePomodoro()" class="btn">⏸</button>
-                    <button onclick="resetPomodoro()" class="btn">↺</button>
-                </div>
-            </div>
-            <div class="glass p-6">
-                <h3 class="text-lg font-semibold mb-4">📝 Çalışma Kaydı</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                    <input id="study-subject" placeholder="Ders / Konu" class="input">
-                    <input id="study-duration" type="number" placeholder="Süre (dk)" class="input" value="60">
-                    <input id="study-focus" type="number" placeholder="Odak (1-10)" class="input" value="7" min="1" max="10">
-                </div>
-                <button onclick="addStudySession()" class="btn btn-primary">💾 Kaydet</button>
-                <div id="study-session-list" class="mt-4 space-y-2"></div>
-            </div>
-        </div>
+        <div id="tab-yks" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">🎯 YKS Komuta Merkezi</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><div class="glass p-6 text-center"><p class="text-sm text-white/40 mb-1">TYT'ye</p><p id="yks-tyt-countdown" class="text-3xl font-black text-apple-blue">--</p><p class="text-xs text-white/30 mt-2">20 Haziran 2026</p></div><div class="glass p-6 text-center"><p class="text-sm text-white/40 mb-1">AYT'ye</p><p id="yks-ayt-countdown" class="text-3xl font-black text-apple-green">--</p><p class="text-xs text-white/30 mt-2">21 Haziran 2026</p></div></div><div class="glass p-4 mb-6"><h3 class="text-lg font-semibold mb-3">📈 Net Takibi</h3><div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3"><input id="yks-subject" placeholder="Ders" class="input text-xs"><input id="yks-topic" placeholder="Konu" class="input text-xs"><input id="yks-correct" type="number" placeholder="Doğru" class="input text-xs" value="0"><input id="yks-wrong" type="number" placeholder="Yanlış" class="input text-xs" value="0"><select id="yks-type" class="input text-xs"><option>TYT</option><option>AYT</option></select></div><button onclick="addYKSProgress()" class="btn btn-primary btn-sm">➕ Ekle</button><div id="yks-progress-list" class="mt-4 space-y-1 text-sm"></div></div></div>
 
-        <div id="tab-settings" class="tab-content p-6 hidden">
-            <h2 class="text-2xl font-bold mb-6 text-white">Ayarlar</h2>
-            <div class="glass p-6 max-w-md">
-                <label class="block text-sm text-white/60 mb-1">Adınız</label>
-                <input id="setting-username" class="input mb-4" onchange="saveSetting('username',this.value)">
-                <label class="block text-sm text-white/60 mb-1">AI Koç Kişiliği</label>
-                <select id="setting-persona" class="input mb-4" onchange="saveSetting('persona',this.value)">
-                    <option>Motivational</option><option>Savage</option><option>Analytical</option><option>Buddy</option>
-                </select>
-                <div class="flex items-center gap-2 mt-4">
-                    <span id="status-dot" class="w-2 h-2 rounded-full bg-green-400"></span>
-                    <span class="text-xs text-white/40">Supabase Cloud — bağlı</span>
-                </div>
-            </div>
-        </div>
+        <div id="tab-study" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">📚 Çalışma & Pomodoro</h2><div class="glass p-6 mb-6"><h3 class="text-lg font-semibold mb-4">⏱ Pomodoro</h3><div class="text-center mb-4"><span id="pomodoro-display" class="text-5xl font-mono font-bold">25:00</span><p id="pomodoro-status" class="text-sm text-white/50 mt-2">Hazır</p></div><div class="flex gap-2 justify-center flex-wrap mb-4"><button onclick="setPomodoro(25,5)" class="btn btn-sm">25/5</button><button onclick="setPomodoro(50,10)" class="btn btn-sm">50/10</button><button onclick="setPomodoro(90,20)" class="btn btn-sm">90/20</button></div><div class="flex gap-3 justify-center"><button id="pom-start" onclick="startPomodoro()" class="btn btn-primary btn-sm">▶ Başlat</button><button onclick="pausePomodoro()" class="btn btn-sm">⏸</button><button onclick="resetPomodoro()" class="btn btn-sm">↺</button></div></div><div class="glass p-6"><h3 class="text-lg font-semibold mb-4">📝 Çalışma Kaydı</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4"><input id="study-subject" placeholder="Ders / Konu" class="input"><input id="study-duration" type="number" placeholder="Süre (dk)" class="input" value="60"><input id="study-focus" type="number" placeholder="Odak (1-10)" class="input" value="7" min="1" max="10"></div><button onclick="addStudySession()" class="btn btn-primary btn-sm">💾 Kaydet</button><div id="study-session-list" class="mt-4 space-y-2"></div></div></div>
+
+        <div id="tab-coach" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">🤖 AI Koç</h2><div class="glass flex flex-col" style="height:calc(100vh - 200px)"><div id="coach-messages" class="flex-1 overflow-y-auto p-4 space-y-3"><div class="chat-msg chat-bot">👋 Selam! Ben SeeOS AI Koç'un. Ders çalışma, motivasyon, YKS stratejisi — ne hakkında konuşmak istersin?</div></div><div class="p-4 border-t border-white/5 flex gap-2"><input id="coach-input" class="input flex-1" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter')sendCoach()"><button onclick="sendCoach()" class="btn btn-primary btn-sm">➤</button></div></div></div>
+
+        <div id="tab-sleep" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">😴 Uyku Takibi</h2><div class="glass p-6 mb-6 max-w-md"><h3 class="text-lg font-semibold mb-4">💤 Yeni Kayıt</h3><div class="grid grid-cols-2 gap-3 mb-3"><div><label class="text-xs text-white/40">Uyku Saati</label><input id="sleep-time" type="datetime-local" class="input mt-1"></div><div><label class="text-xs text-white/40">Uyanma</label><input id="wake-time" type="datetime-local" class="input mt-1"></div></div><div class="flex gap-3 mb-4"><div class="flex-1"><label class="text-xs text-white/40">Kalite (1-10)</label><input id="sleep-quality" type="number" class="input mt-1" value="7" min="1" max="10"></div><div class="flex-1"><label class="text-xs text-white/40">Not</label><input id="sleep-note" class="input mt-1" placeholder="Rüya vs..."></div></div><button onclick="addSleep()" class="btn btn-primary btn-sm">💾 Kaydet</button></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📋 Geçmiş</h3><div id="sleep-list" class="space-y-2 text-sm"></div></div></div>
+
+        <div id="tab-focus" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">⚡ Focus Blast</h2><div class="glass p-6 mb-6 max-w-md"><h3 class="text-lg font-semibold mb-4">🚀 Yeni Blast</h3><input id="focus-task" placeholder="Ne yapacaksın?" class="input mb-3"><input id="focus-duration" type="number" placeholder="Süre (dk)" class="input mb-4" value="25"><button onclick="startFocusBlast()" class="btn btn-primary">⚡ Blast Başlat</button><div id="focus-active" class="hidden mt-6 text-center"><p id="focus-timer" class="text-5xl font-mono font-bold text-apple-orange mb-2">25:00</p><p id="focus-task-name" class="text-white/60"></p><button onclick="completeFocusBlast()" class="btn btn-primary btn-sm mt-4">✅ Tamamla</button></div></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📋 Geçmiş Blast'lar</h3><div id="focus-list" class="space-y-2 text-sm"></div></div></div>
+
+        <div id="tab-youtube" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">▶ YouTube</h2><div class="glass p-4 mb-6 max-w-lg"><h3 class="text-lg font-semibold mb-3">🔗 Video Ekle</h3><div class="flex gap-2"><input id="yt-url" placeholder="YouTube URL'si" class="input flex-1"><button onclick="addYTVideo()" class="btn btn-primary btn-sm">➕ Ekle</button></div></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📺 Geçmiş</h3><div id="yt-list" class="space-y-2 text-sm"></div></div></div>
+
+        <div id="tab-notes" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">📝 Notlar</h2><div class="glass p-4 mb-6 max-w-lg"><div class="flex gap-2 mb-3"><input id="note-title" placeholder="Başlık" class="input flex-1"><button onclick="addNote()" class="btn btn-primary btn-sm">➕ Yeni Not</button></div></div><div id="notes-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+
+        <div id="tab-planner" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">📋 Planlayıcı</h2><div class="glass p-4 mb-6 max-w-lg"><h3 class="text-lg font-semibold mb-3">➕ Yeni Görev</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3"><input id="task-title" placeholder="Görev" class="input"><input id="task-due" type="date" class="input"></div><div class="flex gap-2 mb-3"><select id="task-priority" class="input"><option value="medium">🟡 Orta</option><option value="low">🟢 Düşük</option><option value="high">🟠 Yüksek</option><option value="urgent">🔴 Acil</option></select><button onclick="addTask()" class="btn btn-primary btn-sm flex-1">➕ Ekle</button></div></div><div class="glass p-4"><h3 class="text-lg font-semibold mb-3">📋 Görevler</h3><div id="task-list" class="space-y-2"></div></div></div>
+
+        <div id="tab-settings" class="tab-content p-6 hidden"><h2 class="text-2xl font-bold mb-6">⚙️ Ayarlar</h2><div class="glass p-6 max-w-md"><label class="block text-sm text-white/60 mb-1">Adınız</label><input id="setting-username" class="input mb-4" onchange="saveSetting('username',this.value)"><label class="block text-sm text-white/60 mb-1">AI Koç Kişiliği</label><select id="setting-persona" class="input mb-4" onchange="saveSetting('persona',this.value)"><option>Motivational</option><option>Savage</option><option>Analytical</option><option>Buddy</option></select><label class="block text-sm text-white/60 mb-1">DeepSeek API Key</label><input id="setting-apikey" type="password" class="input mb-4" placeholder="sk-..." onchange="saveSetting('deepseek_key',this.value)"><div class="flex items-center gap-2 mt-4"><span class="w-2 h-2 rounded-full bg-green-400"></span><span class="text-xs text-white/40">Supabase Cloud — bağlı</span></div></div></div>
     </main>
 </div>
 
@@ -150,7 +124,8 @@ const SB_URL = 'https://mrpegrgjndfewwlknqfk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycGVncmdqbmRmZXd3bGtucWZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDU2NjMsImV4cCI6MjA5NzQ4MTY2M30.YU78cwwNa9AwChusZ0grhHw__IVt3cKa9BEuATnEM7g';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 let user = null;
-let appData = {}; // cached settings JSONB
+let appData = {};
+let focusInterval = null, focusSeconds = 0, focusActive = false, focusBlastId = null;
 
 // ═══════ SAFE SUPABASE WRAPPER ═══════
 async function sbQuery(promise, label) {
@@ -168,8 +143,8 @@ function switchAuthTab(tab) {
     document.getElementById('login-error').classList.add('hidden');
     document.getElementById('reg-error').classList.add('hidden');
 }
-function showAuthModal(){ document.getElementById('auth-overlay').classList.remove('hidden'); switchAuthTab('login'); }
-function hideAuthModal(){ document.getElementById('auth-overlay').classList.add('hidden'); }
+function showAuthModal(){ const el=document.getElementById('auth-overlay'); el.style.display='flex'; switchAuthTab('login'); }
+function hideAuthModal(){ const el=document.getElementById('auth-overlay'); el.style.display='none'; }
 
 async function handleLogin(e) {
     e.preventDefault();
@@ -182,7 +157,7 @@ async function handleLogin(e) {
     await loadAppData();
     updateUI();
     hideAuthModal();
-    loadDashboard();
+    refreshAll();
 }
 
 async function handleRegister(e) {
@@ -196,11 +171,11 @@ async function handleRegister(e) {
     if (data.user) {
         user = data.user;
         await sbQuery(sb.from('profiles').upsert({user_id:user.id,username:name},{onConflict:'user_id'}),'profile');
-        await sbQuery(sb.from('settings').upsert({user_id:user.id,theme:'dark',goal_settings:{}}),'settings init');
+        await sbQuery(sb.from('settings').upsert({user_id:user.id,theme:'dark',goal_settings:{persona:'Motivational',sidebar_order:['dashboard','yks','study','coach','sleep','focus','youtube','notes','planner','settings']}},{onConflict:'user_id'}),'settings');
         await loadAppData();
         updateUI();
         hideAuthModal();
-        loadDashboard();
+        refreshAll();
     }
 }
 
@@ -208,7 +183,7 @@ async function handleLogout() {
     await sb.auth.signOut();
     user = null; appData = {};
     updateUI();
-    loadDashboard();
+    refreshAll();
 }
 
 function updateUI() {
@@ -219,17 +194,17 @@ function updateUI() {
     loadAvatar();
 }
 
-// ═══════ APP DATA (settings.goal_settings as JSONB cache) ═══════
+// ═══════ APP DATA ═══════
 async function loadAppData() {
-    if (!user) { appData = {}; return; }
+    if (!user) { appData = {}; renderSidebar(); return; }
     const data = await sbQuery(sb.from('settings').select('goal_settings,theme').eq('user_id',user.id).limit(1),'load settings');
     appData = data?.[0]?.goal_settings || {};
     if (!appData || Object.keys(appData).length === 0) {
-        appData = { persona:'Motivational', sidebar_order:['dashboard','study','settings'] };
+        appData = { persona:'Motivational', sidebar_order:['dashboard','yks','study','coach','sleep','focus','youtube','notes','planner','settings'] };
     }
-    // Populate settings fields
     if (document.getElementById('setting-persona')) document.getElementById('setting-persona').value = appData.persona || 'Motivational';
     if (document.getElementById('setting-username')) document.getElementById('setting-username').value = appData.username || '';
+    if (document.getElementById('setting-apikey')) document.getElementById('setting-apikey').value = appData.deepseek_key || '';
     renderSidebar();
 }
 
@@ -238,19 +213,23 @@ async function saveAppData() {
     await sbQuery(sb.from('settings').upsert({user_id:user.id,theme:'dark',goal_settings:appData},{onConflict:'user_id'}),'save settings');
 }
 
-function saveSetting(key, value) {
-    appData[key] = value;
-    saveAppData();
-}
+function saveSetting(key, value) { appData[key] = value; saveAppData(); }
 
 // ═══════ SIDEBAR ═══════
 const TAB_ICONS = {
     dashboard: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    yks: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/><line x1="22" y1="2" x2="16" y2="8"/>',
     study: '<path d="M12 14l9-5-9-5-9 5z"/><path d="M12 14l6.7-3.7"/><line x1="12" y1="14" x2="12" y2="21"/>',
+    coach: '<path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',
+    sleep: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+    focus: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    youtube: '<polygon points="19.615 3.184 4.385 3.184 1 6 1 18 4.385 20.816 19.615 20.816 23 18 23 6 19.615 3.184"/><polygon points="10 8 16 12 10 16 10 8"/>',
+    notes: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+    planner: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
     settings: '<circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
 };
-const TAB_LABELS = { dashboard:'Dashboard', study:'Çalışma', settings:'Ayarlar' };
-const DEFAULT_ORDER = ['dashboard','study','settings'];
+const TAB_LABELS = { dashboard:'Dashboard', yks:'🎯 YKS', study:'📚 Çalışma', coach:'🤖 Koç', sleep:'😴 Uyku', focus:'⚡ Focus', youtube:'▶ YT', notes:'📝 Notlar', planner:'📋 Plan', settings:'⚙️ Ayarlar' };
+const DEFAULT_ORDER = ['dashboard','yks','study','coach','sleep','focus','youtube','notes','planner','settings'];
 
 function renderSidebar() {
     const order = appData.sidebar_order || DEFAULT_ORDER;
@@ -270,7 +249,26 @@ function switchTab(name) {
     if (btn) btn.classList.add('active');
     if (name === 'dashboard') loadDashboard();
     if (name === 'study') loadStudyList();
+    if (name === 'yks') loadYKS();
+    if (name === 'coach') scrollCoachBottom();
+    if (name === 'sleep') loadSleepList();
+    if (name === 'focus') loadFocusList();
+    if (name === 'youtube') loadYTList();
+    if (name === 'notes') loadNotesList();
+    if (name === 'planner') loadTaskList();
     closeMobileMenu();
+}
+
+function refreshAll() {
+    const activeTab = document.querySelector('.tab-content:not(.hidden)')?.id?.replace('tab-','');
+    if (activeTab === 'dashboard' || !activeTab) loadDashboard();
+    if (activeTab === 'yks') loadYKS();
+    if (activeTab === 'study') loadStudyList();
+    if (activeTab === 'sleep') loadSleepList();
+    if (activeTab === 'focus') loadFocusList();
+    if (activeTab === 'youtube') loadYTList();
+    if (activeTab === 'notes') loadNotesList();
+    if (activeTab === 'planner') loadTaskList();
 }
 
 // ═══════ MOBILE ═══════
@@ -322,13 +320,16 @@ async function loadDashboard() {
     if (!user) {
         document.getElementById('dash-empty').classList.remove('hidden');
         document.getElementById('kpi-grid').innerHTML = '';
-        document.getElementById('study-list').innerHTML = '';
+        document.getElementById('study-list-inner').innerHTML = '';
+        document.getElementById('sleep-card-inner').textContent = 'Giriş yapın';
         return;
     }
     document.getElementById('dash-empty').classList.add('hidden');
     
-    // Fetch study sessions for KPI
-    const sessions = await sbQuery(sb.from('study_sessions').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(100),'dashboard');
+    const [sessions, sleepData] = await Promise.all([
+        sbQuery(sb.from('study_sessions').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(100),'dashboard'),
+        sbQuery(sb.from('sleep_records').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(1),'sleep card')
+    ]);
     
     const total = sessions?.length || 0;
     const totalMin = sessions?.reduce((s,r)=>s+(r.duration_minutes||0),0) || 0;
@@ -344,11 +345,64 @@ async function loadDashboard() {
         {label:'Ort. Odak',val:avgFocus+'/10',color:'#AF52DE'}
     ].map(k=>`<div class="glass p-4"><p class="text-xs text-white/40 mb-1">${k.label}</p><p class="text-2xl font-bold" style="color:${k.color}">${k.val}</p></div>`).join('');
     
-    // Recent sessions
-    const recent = sessions?.slice(0,10) || [];
-    document.getElementById('study-list').innerHTML = recent.length 
-        ? '<h3 class="text-lg font-semibold mb-3 text-white/80">Son Seanslar</h3>'+recent.map(s=>`<div class="flex justify-between items-center px-4 py-2 rounded-xl text-sm" style="background:rgba(255,255,255,0.03)"><span class="text-white/80">${s.subject_name}</span><span class="text-white/50">${s.duration_minutes}dk</span><span class="text-white/25 text-xs">${new Date(s.created_at).toLocaleDateString('tr-TR')}</span></div>`).join('')
-        : '<p class="text-white/25 text-sm py-4">Henüz çalışma kaydı yok.</p>';
+    const recent = sessions?.slice(0,8) || [];
+    document.getElementById('study-list-inner').innerHTML = recent.length 
+        ? recent.map(s=>`<div class="flex justify-between items-center px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><span>${s.subject_name}</span><span class="text-white/40">${s.duration_minutes}dk</span></div>`).join('')
+        : '<p class="text-white/25 text-xs">Henüz kayıt yok</p>';
+    
+    const lastSleep = sleepData?.[0];
+    if (lastSleep && lastSleep.wake_time) {
+        const sleepT = new Date(lastSleep.sleep_time), wakeT = new Date(lastSleep.wake_time);
+        const hrs = ((wakeT - sleepT) / 3600000).toFixed(1);
+        document.getElementById('sleep-card-inner').innerHTML = `🛏 ${sleepT.toLocaleDateString('tr-TR')}<br>⏱ ${hrs} saat — Kalite: ${lastSleep.quality || '?'}/10`;
+    } else {
+        document.getElementById('sleep-card-inner').textContent = 'Henüz uyku kaydı yok';
+    }
+}
+
+// ═══════ YKS ═══════
+function updateYKSCountdown() {
+    const tyt = new Date('2026-06-20T10:15:00+03:00');
+    const ayt = new Date('2026-06-21T10:15:00+03:00');
+    const now = new Date();
+    
+    function fmt(ms) {
+        if (ms <= 0) return '🎉 SINAV GÜNÜ!';
+        const days = Math.floor(ms/86400000);
+        const hrs = Math.floor((ms%86400000)/3600000);
+        return days+'g '+hrs+'s';
+    }
+    document.getElementById('yks-tyt-countdown').textContent = fmt(tyt - now);
+    document.getElementById('yks-ayt-countdown').textContent = fmt(ayt - now);
+}
+setInterval(updateYKSCountdown, 60000); updateYKSCountdown();
+
+async function loadYKS() {
+    if (!user) return;
+    const data = await sbQuery(sb.from('yks_progress').select('*').eq('user_id',user.id).order('date',{ascending:false}).limit(30),'yks');
+    const el = document.getElementById('yks-progress-list');
+    if (!data?.length) { el.innerHTML = '<p class="text-white/25 text-xs">Henüz net kaydı yok</p>'; return; }
+    el.innerHTML = data.map(r=>{
+        const net = (r.correct||0) - ((r.wrong||0)/4);
+        return `<div class="flex justify-between items-center px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><span>${r.exam_type} ${r.subject} ${r.topic||''}</span><span class="text-white/40">${r.correct}D ${r.wrong}Y</span><span class="font-semibold" style="color:${net>=0?'#34C759':'#FF3B30'}">${net.toFixed(1)} net</span></div>`;
+    }).join('');
+}
+
+async function addYKSProgress() {
+    if (!user) return alert('Önce giriş yapın!');
+    const subject = document.getElementById('yks-subject').value.trim();
+    const topic = document.getElementById('yks-topic').value.trim();
+    const correct = parseInt(document.getElementById('yks-correct').value) || 0;
+    const wrong = parseInt(document.getElementById('yks-wrong').value) || 0;
+    const examType = document.getElementById('yks-type').value;
+    if (!subject) return alert('Ders adı girin!');
+    const total = correct + wrong;
+    await sbQuery(sb.from('yks_progress').insert({user_id:user.id,subject,topic,correct,wrong,total,exam_type:examType}),'yks add');
+    document.getElementById('yks-subject').value='';
+    document.getElementById('yks-topic').value='';
+    document.getElementById('yks-correct').value='0';
+    document.getElementById('yks-wrong').value='0';
+    loadYKS();
 }
 
 // ═══════ STUDY SESSIONS ═══════
@@ -358,7 +412,7 @@ async function addStudySession() {
     const duration = parseInt(document.getElementById('study-duration').value);
     const focus = parseInt(document.getElementById('study-focus').value) || 7;
     if (!subject||!duration) return alert('Tüm alanları doldurun!');
-    await sbQuery(sb.from('study_sessions').insert({user_id:user.id,subject_name:subject,duration_minutes:duration}),'add study');
+    await sbQuery(sb.from('study_sessions').insert({user_id:user.id,subject_name:subject,duration_minutes:duration,focus_score:focus}),'add study');
     document.getElementById('study-subject').value='';
     document.getElementById('study-duration').value='60';
     loadStudyList();
@@ -376,23 +430,249 @@ async function loadStudyList() {
 
 // ═══════ POMODORO ═══════
 let pomWork=25, pomBreak=5, pomSeconds=25*60, pomInterval=null, pomRunning=false;
+function setPomodoro(w,b) { pomWork=w; pomBreak=b; pomSeconds=w*60; updatePomDisplay(); document.getElementById('pomodoro-status').textContent='Hazır ('+w+'dk)'; }
+function updatePomDisplay() { const m=Math.floor(pomSeconds/60),s=pomSeconds%60; document.getElementById('pomodoro-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+function startPomodoro() { if(pomRunning)return; pomRunning=true; document.getElementById('pom-start').textContent='▶'; pomInterval=setInterval(()=>{pomSeconds--;updatePomDisplay();if(pomSeconds<=0){clearInterval(pomInterval);pomRunning=false;document.getElementById('pomodoro-status').textContent='⏰ Mola zamanı!';}},1000); }
+function pausePomodoro() { clearInterval(pomInterval); pomRunning=false; }
+function resetPomodoro() { clearInterval(pomInterval); pomRunning=false; pomSeconds=pomWork*60; updatePomDisplay(); document.getElementById('pomodoro-status').textContent='Hazır'; }
+updatePomDisplay();
 
-function setPomodoro(w,b) { pomWork=w; pomBreak=b; pomSeconds=w*60; updatePomodoroDisplay(); document.getElementById('pomodoro-status').textContent='Hazır ('+w+'dk)'; }
-function updatePomodoroDisplay() { const m=Math.floor(pomSeconds/60),s=pomSeconds%60; document.getElementById('pomodoro-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
-function startPomodoro() { if(pomRunning)return; pomRunning=true; document.getElementById('pomodoro-start').textContent='▶'; pomInterval=setInterval(()=>{pomSeconds--;updatePomodoroDisplay();if(pomSeconds<=0){clearInterval(pomInterval);pomRunning=false;document.getElementById('pomodoro-status').textContent='Tamamlandı!';new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4AA==').play().catch(()=>{});}},1000); }
-function pausePomodoro() { clearInterval(pomInterval); pomRunning=false; document.getElementById('pomodoro-start').textContent='▶'; }
-function resetPomodoro() { clearInterval(pomInterval); pomRunning=false; pomSeconds=pomWork*60; updatePomodoroDisplay(); document.getElementById('pomodoro-status').textContent='Hazır ('+pomWork+'dk)'; }
-updatePomodoroDisplay();
+// ═══════ AI COACH ═══════
+async function sendCoach() {
+    if (!user) return alert('Önce giriş yapın!');
+    const input = document.getElementById('coach-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    
+    addCoachMessage('user', msg);
+    await sbQuery(sb.from('coach_chats').insert({user_id:user.id,role:'user',content:msg}),'coach user');
+    
+    const apiKey = appData.deepseek_key || 'sk-646...31f1';
+    const persona = appData.persona || 'Motivational';
+    const personaPrompts = {
+        Motivational: 'Sen motive edici bir YKS koçusun. Kısa, enerjik, Türkçe cevap ver.',
+        Savage: 'Sen acımasız dürüst bir koçsun. Sert ama yapıcı, kısa Türkçe cevap ver.',
+        Analytical: 'Sen analitik bir çalışma koçusun. Veri odaklı, stratejik, kısa Türkçe cevap ver.',
+        Buddy: 'Sen samimi bir dert ortağısın. Arkadaşça, rahat, kısa Türkçe cevap ver.'
+    };
+    
+    try {
+        const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+            body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [
+                    {role:'system',content:personaPrompts[persona]||personaPrompts.Motivational},
+                    {role:'user',content:msg}
+                ],
+                max_tokens: 300
+            })
+        });
+        const data = await resp.json();
+        const reply = data.choices?.[0]?.message?.content || '⏳ Düşünüyorum...';
+        addCoachMessage('assistant', reply);
+        await sbQuery(sb.from('coach_chats').insert({user_id:user.id,role:'assistant',content:reply}),'coach bot');
+    } catch(e) {
+        addCoachMessage('assistant', '⚠️ Bağlantı hatası. API key doğru mu?');
+    }
+}
+
+function addCoachMessage(role, content) {
+    const container = document.getElementById('coach-messages');
+    const div = document.createElement('div');
+    div.className = 'chat-msg ' + (role === 'user' ? 'chat-user' : 'chat-bot');
+    div.textContent = content;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+async function loadCoachHistory() {
+    if (!user) return;
+    const data = await sbQuery(sb.from('coach_chats').select('*').eq('user_id',user.id).order('created_at',{ascending:true}).limit(50),'coach hist');
+    const container = document.getElementById('coach-messages');
+    container.innerHTML = '<div class="chat-msg chat-bot">👋 Selam! Ben SeeOS AI Koç\'un. Ders çalışma, motivasyon, YKS stratejisi — ne hakkında konuşmak istersin?</div>';
+    if (data) data.forEach(m => addCoachMessage(m.role, m.content));
+}
+function scrollCoachBottom() {
+    const c = document.getElementById('coach-messages');
+    if (c) c.scrollTop = c.scrollHeight;
+}
+
+// ═══════ SLEEP ═══════
+async function addSleep() {
+    if (!user) return alert('Önce giriş yapın!');
+    const sleepTime = document.getElementById('sleep-time').value;
+    const wakeTime = document.getElementById('wake-time').value;
+    const quality = parseInt(document.getElementById('sleep-quality').value) || 7;
+    const notes = document.getElementById('sleep-note').value.trim();
+    if (!sleepTime) return alert('Uyku saati girin!');
+    const payload = {user_id:user.id, sleep_time:new Date(sleepTime).toISOString(), quality, notes};
+    if (wakeTime) payload.wake_time = new Date(wakeTime).toISOString();
+    await sbQuery(sb.from('sleep_records').insert(payload),'sleep add');
+    document.getElementById('sleep-time').value='';
+    document.getElementById('wake-time').value='';
+    document.getElementById('sleep-note').value='';
+    loadSleepList();
+    loadDashboard();
+}
+
+async function loadSleepList() {
+    if (!user) return;
+    const data = await sbQuery(sb.from('sleep_records').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(20),'sleep list');
+    const el = document.getElementById('sleep-list');
+    el.innerHTML = data?.length ? data.map(r=>{
+        const st = new Date(r.sleep_time), wt = r.wake_time ? new Date(r.wake_time) : null;
+        const hrs = wt ? ((wt-st)/3600000).toFixed(1) : '?';
+        return `<div class="flex justify-between items-center px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><span>${st.toLocaleDateString('tr-TR')}</span><span>${hrs}s</span><span>⭐${r.quality||'?'}</span>${r.notes?`<span class="text-white/30">${r.notes}</span>`:''}</div>`;
+    }).join('') : '<p class="text-white/25 text-xs">Henüz uyku kaydı yok</p>';
+}
+
+// ═══════ FOCUS BLAST ═══════
+async function startFocusBlast() {
+    if (!user) return alert('Önce giriş yapın!');
+    if (focusActive) return;
+    const task = document.getElementById('focus-task').value.trim() || 'Odaklanma';
+    const duration = parseInt(document.getElementById('focus-duration').value) || 25;
+    focusSeconds = duration * 60;
+    focusActive = true;
+    
+    const resp = await sbQuery(sb.from('focus_blasts').insert({user_id:user.id,task,duration_minutes:duration}).select(),'blast start');
+    if (resp?.[0]) focusBlastId = resp[0].id;
+    
+    document.getElementById('focus-active').classList.remove('hidden');
+    document.getElementById('focus-task-name').textContent = task;
+    document.getElementById('focus-task').value = '';
+    updateFocusTimer();
+    focusInterval = setInterval(() => {
+        focusSeconds--;
+        updateFocusTimer();
+        if (focusSeconds <= 0) { clearInterval(focusInterval); focusActive = false; completeFocusBlast(); }
+    }, 1000);
+}
+
+function updateFocusTimer() {
+    const m = Math.floor(focusSeconds/60), s = focusSeconds%60;
+    document.getElementById('focus-timer').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+async function completeFocusBlast() {
+    clearInterval(focusInterval); focusActive = false;
+    document.getElementById('focus-active').classList.add('hidden');
+    if (focusBlastId) {
+        await sbQuery(sb.from('focus_blasts').update({completed:true}).eq('id',focusBlastId),'blast done');
+        focusBlastId = null;
+    }
+    loadFocusList();
+}
+
+async function loadFocusList() {
+    if (!user) return;
+    const data = await sbQuery(sb.from('focus_blasts').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(20),'focus list');
+    const el = document.getElementById('focus-list');
+    el.innerHTML = data?.length ? data.map(r=>`<div class="flex justify-between items-center px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><span>${r.task}</span><span class="text-white/40">${r.duration_minutes}dk</span><span>${r.completed?'✅':'⏳'}</span></div>`).join('') : '<p class="text-white/25 text-xs">Henüz blast yok</p>';
+}
+
+// ═══════ YOUTUBE ═══════
+async function addYTVideo() {
+    if (!user) return alert('Önce giriş yapın!');
+    const url = document.getElementById('yt-url').value.trim();
+    if (!url) return alert('URL girin!');
+    
+    let videoId = '';
+    try { const u = new URL(url); videoId = u.searchParams.get('v') || u.pathname.split('/').pop(); } catch(e) {}
+    if (!videoId) return alert('Geçersiz YouTube URL!');
+    
+    await sbQuery(sb.from('youtube_history').insert({user_id:user.id,video_id:videoId,title:url}),'yt add');
+    document.getElementById('yt-url').value = '';
+    loadYTList();
+}
+
+async function loadYTList() {
+    if (!user) return;
+    const data = await sbQuery(sb.from('youtube_history').select('*').eq('user_id',user.id).order('watched_at',{ascending:false}).limit(20),'yt list');
+    const el = document.getElementById('yt-list');
+    el.innerHTML = data?.length ? data.map(r=>{
+        const thumb = `https://i.ytimg.com/vi/${r.video_id}/default.jpg`;
+        return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs" style="background:rgba(255,255,255,0.03)"><img src="${thumb}" class="w-16 h-9 rounded object-cover"><span class="flex-1 text-white/70 truncate">${r.title||r.video_id}</span><a href="https://youtube.com/watch?v=${r.video_id}" target="_blank" class="text-apple-blue text-xs">▶</a></div>`;
+    }).join('') : '<p class="text-white/25 text-xs">Henüz video yok</p>';
+}
+
+// ═══════ NOTES ═══════
+async function addNote() {
+    if (!user) return alert('Önce giriş yapın!');
+    const title = document.getElementById('note-title').value.trim();
+    if (!title) return alert('Başlık girin!');
+    await sbQuery(sb.from('notes').insert({user_id:user.id,title,content:''}),'note add');
+    document.getElementById('note-title').value = '';
+    loadNotesList();
+}
+
+async function loadNotesList() {
+    if (!user) return;
+    const data = await sbQuery(sb.from('notes').select('*').eq('user_id',user.id).order('updated_at',{ascending:false}).limit(50),'notes');
+    const el = document.getElementById('notes-list');
+    if (!data?.length) { el.innerHTML = '<p class="text-white/25 text-sm col-span-full">Henüz not yok. Başlık yazıp ➕ tıkla.</p>'; return; }
+    el.innerHTML = data.map(n=>`<div class="glass p-4"><div class="flex justify-between items-start mb-2"><h4 class="font-semibold text-sm text-white/80">${n.title}</h4><div class="flex gap-1"><button onclick="editNote('${n.id}','${n.title.replace(/'/g,"\\'")}')" class="text-xs text-white/30 hover:text-white">✏</button><button onclick="deleteNote('${n.id}')" class="text-xs text-white/30 hover:text-red-400">🗑</button></div></div><textarea class="w-full bg-transparent border border-white/5 rounded-lg p-2 text-xs text-white/50 resize-none" rows="3" onchange="saveNoteContent('${n.id}',this.value)">${(n.content||'').replace(/</g,'&lt;')}</textarea><p class="text-[10px] text-white/20 mt-2">${new Date(n.updated_at||n.created_at).toLocaleDateString('tr-TR')}</p></div>`).join('');
+}
+
+async function saveNoteContent(id, content) {
+    await sbQuery(sb.from('notes').update({content,updated_at:new Date().toISOString()}).eq('id',id),'note save');
+}
+
+async function editNote(id, oldTitle) {
+    const title = prompt('Yeni başlık:', oldTitle);
+    if (title) { await sbQuery(sb.from('notes').update({title,updated_at:new Date().toISOString()}).eq('id',id),'note edit'); loadNotesList(); }
+}
+
+async function deleteNote(id) {
+    if (confirm('Notu sil?')) { await sbQuery(sb.from('notes').delete().eq('id',id),'note del'); loadNotesList(); }
+}
+
+// ═══════ PLANNER ═══════
+async function addTask() {
+    if (!user) return alert('Önce giriş yapın!');
+    const title = document.getElementById('task-title').value.trim();
+    const due = document.getElementById('task-due').value;
+    const priority = document.getElementById('task-priority').value;
+    if (!title) return alert('Görev adı girin!');
+    await sbQuery(sb.from('planner_tasks').insert({user_id:user.id,title,priority,due_date:due||null}),'task add');
+    document.getElementById('task-title').value = '';
+    document.getElementById('task-due').value = '';
+    loadTaskList();
+}
+
+async function loadTaskList() {
+    if (!user) return;
+    const data = await sbQuery(sb.from('planner_tasks').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(50),'tasks');
+    const el = document.getElementById('task-list');
+    if (!data?.length) { el.innerHTML = '<p class="text-white/25 text-xs">Henüz görev yok</p>'; return; }
+    const priorityEmoji = {low:'🟢',medium:'🟡',high:'🟠',urgent:'🔴'};
+    el.innerHTML = data.map(t=>`<div class="flex justify-between items-center px-4 py-2 rounded-xl text-sm ${t.status==='done'?'task-done':''}" style="background:rgba(255,255,255,0.03)"><span class="text-white/80">${priorityEmoji[t.priority]||''} ${t.title}</span><div class="flex gap-2 items-center">${t.due_date?`<span class="text-[10px] text-white/30">${new Date(t.due_date).toLocaleDateString('tr-TR')}</span>`:''}<button onclick="toggleTask('${t.id}','${t.status}')" class="text-xs btn-sm ${t.status==='done'?'bg-green-500/20 text-green-400':'bg-white/5 text-white/40'}">${t.status==='done'?'✅':'○'}</button><button onclick="deleteTask('${t.id}')" class="text-xs text-white/20 hover:text-red-400">🗑</button></div></div>`).join('');
+}
+
+async function toggleTask(id, currentStatus) {
+    const newStatus = currentStatus === 'done' ? 'todo' : 'done';
+    await sbQuery(sb.from('planner_tasks').update({status:newStatus}).eq('id',id),'task toggle');
+    loadTaskList();
+}
+
+async function deleteTask(id) {
+    await sbQuery(sb.from('planner_tasks').delete().eq('id',id),'task del');
+    loadTaskList();
+}
 
 // ═══════ INIT ═══════
 async function init() {
-    renderSidebar(); // Always show sidebar
+    renderSidebar();
     const {data} = await sb.auth.getSession();
     if (data?.session?.user) {
         user = data.session.user;
         await loadAppData();
         updateUI();
         loadDashboard();
+        loadCoachHistory();
     } else {
         updateUI();
         loadDashboard();
